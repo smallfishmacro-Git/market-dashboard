@@ -58,6 +58,26 @@ st.caption("smallfishmacro — personal market indicators")
 
 # ── Refresh button ───────────────────────────────────────────────────────────────
 if st.button("🔄 Refresh Data", type="primary"):
+    import data_updater
+    total = len(data_updater.SYMBOLS)
+    log_lines = []
+    progress_bar = st.progress(0, text="Starting update...")
+    status = st.empty()
+
+    def log_fn(msg):
+        log_lines.append(msg)
+        completed = sum(1 for l in log_lines if "✅" in l or "⚠️" in l or "❌" in l)
+        if completed > 0 and completed <= total:
+            pct = int((completed / total) * 100)
+            progress_bar.progress(pct, text=f"Updating... {completed}/{total} ({pct}%)")
+            status.caption(msg)
+
+    success, failed = data_updater.run_update(log_fn=log_fn)
+    progress_bar.progress(100, text="✅ Update complete!")
+    status.empty()
+    st.success(f"{success} files updated, {failed} skipped.")
+    with st.expander("View update log"):
+        st.code("\n".join(log_lines))
     st.cache_data.clear()
     st.rerun()
 

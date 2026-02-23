@@ -170,5 +170,5 @@ with tab5:
 # TAB 6 — BUY THE DIP
 # ══════════════════════════════════════════════════════════════════════════════════
 with tab6:
-    st.subheader("Buy the Dip — Oversold Signals")
-    st.info("Charts coming soon — oversold signals and mean reversion indicators will appear here.")
+    import tab_buy_the_dip
+    tab_buy_the_dip.render()

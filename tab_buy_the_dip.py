@@ -29,14 +29,14 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 try:
     import yfinance.base as _yfbase
-    import requests as _req
+    import requests as _req  # type: ignore[import-untyped]
     _orig_session = _yfbase.TickerBase._get_session if hasattr(_yfbase.TickerBase, '_get_session') else None
 except Exception:
     pass
 
 def _download_no_ssl(tickers, **kwargs):
     """yfinance download with SSL verification disabled."""
-    import requests
+    import requests  # type: ignore[import-untyped]
     session = requests.Session()
     session.verify = False
     return yf.download(tickers, session=session, **kwargs)

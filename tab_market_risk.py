@@ -15,7 +15,7 @@ Run compute_and_save_all() once via the UI button or data_updater.py.
 import os, io, warnings
 import pandas as pd
 import numpy as np
-import requests
+import requests  # type: ignore[import-untyped]
 import streamlit as st
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots

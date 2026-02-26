@@ -2,8 +2,13 @@ name: Daily Data Update
 
 on:
   schedule:
-    # 21:30 UTC = 4:30 PM EST (UTC-5). Runs Mon–Fri.
-    - cron: "30 21 * * 1-5"
+    # 4:30 PM ET year-round — two entries to cover EST and EDT:
+    #   EST (UTC-5): Nov–Feb  → 21:30 UTC
+    #   EDT (UTC-4): Mar–Oct  → 20:30 UTC
+    # Note: DST transitions fall partway through Mar/Nov, so the switch is
+    # approximate (±1 hr on transition week only).
+    - cron: "30 21 * 1,2,11,12 1-5"   # EST  — Jan, Feb, Nov, Dec
+    - cron: "30 20 * 3-10      1-5"   # EDT  — Mar through Oct
   workflow_dispatch:   # allow manual trigger from GitHub UI
 
 permissions:

@@ -14,7 +14,7 @@ st.set_page_config(
 
 # ── Dark theme styling ─────────────────────────────────────────────────────────
 st.markdown("""<style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@400;500;600&display=swap');
 
 /* ── Apply font only to text-bearing elements, NOT icon elements ── */
 body, .stApp,
@@ -28,8 +28,8 @@ h1, h2, h3, h4, h5, h6,
 .stTabs [data-baseweb="tab"],
 input, select, textarea,
 div[data-testid="stButton"] > button {
-    font-family: 'Share Tech Mono', monospace !important;
-    letter-spacing: 0.04em;
+    font-family: 'Inter', sans-serif !important;
+    letter-spacing: 0.01em;
 }
 
 /* ── Background ── */
@@ -37,7 +37,7 @@ div[data-testid="stButton"] > button {
 
 /* ── Headings orange ── */
 h1, h2, h3 { color: #ff6600 !important; text-transform: uppercase; letter-spacing: 0.12em; }
-.stSubheader > div > div { color: #ff6600 !important; text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Share Tech Mono', monospace !important; }
+.stSubheader > div > div { color: #ff6600 !important; text-transform: uppercase; letter-spacing: 0.05em; }
 
 /* ── Tabs ── */
 .stTabs [data-baseweb="tab-list"] { background-color: #111111; border-bottom: 1px solid #222; }
@@ -51,16 +51,16 @@ div[data-testid="stMetricDelta"] { font-size: 0.75rem; }
 
 /* ── Expanders — text only, arrow untouched ── */
 .stExpander { border: 1px solid #1e1e1e !important; background-color: #111111 !important; }
-details summary p { color: #aaaaaa; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; font-family: 'Share Tech Mono', monospace !important; }
+details summary p { color: #aaaaaa; font-size: 0.8rem; letter-spacing: 0.05em; text-transform: uppercase; }
 
 /* ── Subtle refresh button ── */
 div[data-testid="stButton"] > button {
     background-color: #1a1a1a !important;
     color: #444444 !important;
     border: 1px solid #2a2a2a !important;
-    font-size: 0.68rem !important;
+    font-size: 0.65rem !important;
     letter-spacing: 0.1em !important;
-    padding: 2px 10px !important;
+    padding: 1px 8px !important;
     border-radius: 3px !important;
     box-shadow: none !important;
     text-transform: uppercase;
@@ -108,7 +108,7 @@ def delta(df):
 # ── Header ─────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@400;500;600&display=swap');
 .regime-header {
     display: flex;
     align-items: center;
@@ -160,7 +160,6 @@ st.markdown("""
     <div class="regime-title-block">
         <p class="regime-title">SmallFish&nbsp;Terminal</p>
         <p class="regime-sub">Market Regime Detection &middot; Trend Health Model &middot; Buy The Dip</p>
-        <p class="regime-version">v2.0 &mdash; Personal Market Dashboard</p>
     </div>
 </div>
 """, unsafe_allow_html=True)

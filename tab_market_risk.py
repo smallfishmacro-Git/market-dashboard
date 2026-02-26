@@ -714,21 +714,13 @@ def render():
         ("2. Nasdaq 100 Cumulative Hi-Lo", "N100_HiLo",      "", "#4ecdc4", "N100 Hi-Lo Strategy",   "1999-01-01"),
         ("3. Credit Spreads (FRED)",       "Credit_Spreads", "", "#ff6b6b", "Credit Spread Strategy", "1997-01-01"),
     ]:
-        key = f"show_{col}"
         with st.expander(title, expanded=False):
-            if key not in st.session_state:
-                st.session_state[key] = False
-            if not st.session_state[key]:
-                if st.button("📊 Load chart", key=f"btn_{col}"):
-                    st.session_state[key] = True
-                    st.rerun()
+            fig, err = _ind_chart(title, ind_df, col, spx_s,
+                                   None, ind_name, ind_col, label, start_date=start)
+            if fig:
+                st.plotly_chart(fig, width='stretch')
             else:
-                fig, err = _ind_chart(title, ind_df, col, spx_s,
-                                       None, ind_name, ind_col, label, start_date=start)
-                if fig:
-                    st.plotly_chart(fig, width='stretch')
-                else:
-                    st.warning(f"Chart unavailable: {err}")
+                st.warning(f"Chart unavailable: {err}")
 
     st.divider()
 
@@ -773,18 +765,10 @@ def render():
         ("17. SuperTrend Short Term (ATR 63×5)",    "ST_ST",     LIME,      "ST ST Strategy",     "1990-01-01"),
         ("18. VIX Term Structure × HMM",            "VIX_HMM",   "#ff6b6b", "VIX×HMM Strategy",  "2007-01-01"),
     ]:
-        key = f"show_{col}"
         with st.expander(title, expanded=False):
-            if key not in st.session_state:
-                st.session_state[key] = False
-            if not st.session_state[key]:
-                if st.button("📊 Load chart", key=f"btn_{col}"):
-                    st.session_state[key] = True
-                    st.rerun()
+            fig, err = _ind_chart(title, ind_df, col, spx_s,
+                                   None, "", ind_col, label, start_date=start)
+            if fig:
+                st.plotly_chart(fig, width='stretch')
             else:
-                fig, err = _ind_chart(title, ind_df, col, spx_s,
-                                       None, "", ind_col, label, start_date=start)
-                if fig:
-                    st.plotly_chart(fig, width='stretch')
-                else:
-                    st.warning(f"Chart unavailable: {err}")
+                st.warning(f"Chart unavailable: {err}")

@@ -1,0 +1,38 @@
+name: Daily Data Update
+
+on:
+  schedule:
+    # 21:30 UTC = 4:30 PM EST (UTC-5). Runs Mon–Fri.
+    - cron: "30 21 * * 1-5"
+  workflow_dispatch:   # allow manual trigger from GitHub UI
+
+permissions:
+  contents: write      # needed to push updated CSVs back to repo
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run data updater
+        run: python data_updater.py
+
+      - name: Commit and push updated CSVs
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/barchart/*.csv data/datasets/*.csv
+          git diff --staged --quiet || git commit -m "chore: daily data update $(date -u +%Y-%m-%d)"
+          git push

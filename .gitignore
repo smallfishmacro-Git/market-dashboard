@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Environments
+.env
+.venv/
+venv/
+
+# Streamlit secrets (never commit)
+.streamlit/secrets.toml
+
+# Excel files (not used by code)
+*.xlsx
+
+# OS
+.DS_Store
+Thumbs.db

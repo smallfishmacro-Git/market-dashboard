@@ -10,6 +10,7 @@ Or triggered from within the Streamlit dashboard via the Update Data button.
 """
 
 import os
+import sys
 import requests
 import pandas as pd
 from datetime import datetime, timedelta
@@ -17,10 +18,16 @@ from urllib.parse import unquote
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+# ── Fix Windows cp1252 console so emoji log lines don't crash ──────────────────
+if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf_8"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if sys.stderr.encoding and sys.stderr.encoding.lower() not in ("utf-8", "utf_8"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 # ── Paths ───────────────────────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-BARCHART = os.path.join(BASE_DIR, "datasets", "barchart")
-DATASETS = os.path.join(BASE_DIR, "datasets")
+BARCHART = os.path.join(BASE_DIR, "data", "barchart")
+DATASETS = os.path.join(BASE_DIR, "data", "datasets")
 
 # ── Master list of all 50 symbols ───────────────────────────────────────────────
 SYMBOLS = [

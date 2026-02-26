@@ -653,7 +653,7 @@ def render():
             "cell in the Colab notebook first, then click Refresh."
         )
         st.code(f"Looking in:\n  {CSV_LT}\n  {CSV_THM}\n  {CSV_IND}")
-        if st.button("🔄 Refresh from CSVs"):
+        if st.button("🔄"):
             st.rerun()
         return
 
@@ -677,14 +677,8 @@ def render():
                 f"CSV_IND: {'✅' if ind_df is not None else '❌'} {CSV_IND}")
         return
 
-    # Show available columns for debugging
-    with st.expander("🔍 Debug: CSV column check", expanded=False):
-        st.write("**ind_df columns:**", list(ind_df.columns))
-        st.write("**df_thm columns:**", list(df_thm.columns))
-        st.write("**df_lt columns:**",  list(df_lt.columns))
-
     # Refresh button — just clears cache and reloads from CSVs (fast)
-    if st.button("🔄 Refresh from CSVs"):
+    if st.button("🔄"):
         st.cache_data.clear()
         st.rerun()
 

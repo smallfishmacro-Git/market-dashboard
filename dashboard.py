@@ -264,6 +264,76 @@ with tab1:
         except Exception:
             pass
 
+        # ── Market Risk Indicators Grid ───────────────────────────────────────
+        st.subheader("Market Risk Indicators")
+        try:
+            _ind = pd.read_csv(os.path.join(DATASETS, "market_risk_indicators.csv"), index_col=0, parse_dates=True)
+            _ind = _ind[_ind.index.notna()].sort_index()
+            _ind_labels = {
+                "OECD_CLI":       "OECD CLI",
+                "N100_HiLo":      "NDX Hi-Lo",
+                "Credit_Spreads": "Credit Spreads",
+                "Vol_Regime":     "Vol Regime",
+                "HiLo_52W":       "52W Hi-Lo",
+                "Canary":         "Canary",
+                "Pct_200SMA":     "% Above 200D",
+                "ACWI_200":       "ACWI 200",
+                "AD_Line":        "A/D Line",
+                "InOut":          "In/Out",
+                "VIX_TS":         "VIX Term Str.",
+                "HMM":            "HMM",
+                "Quad":           "Quad",
+                "BTC":            "Bitcoin",
+                "ST_LT":          "ST Long",
+                "ST_MT":          "ST Medium",
+                "ST_ST":          "ST Short",
+                "VIX_HMM":        "VIX x HMM",
+            }
+            _ind_cols = [c for c in _ind.columns if c != "S&P500"]
+            for _i in range(0, len(_ind_cols), 6):
+                _row = st.columns(6)
+                for _j, _cn in enumerate(_ind_cols[_i:_i+6]):
+                    _s = _ind[_cn].dropna()
+                    _v = int(_s.iloc[-1]) if len(_s) else None
+                    _lbl = _ind_labels.get(_cn, _cn)
+                    with _row[_j]:
+                        if _v == 1:
+                            st.markdown(f"<div style='background:#111;border:1px solid #1e1e1e;border-radius:6px;padding:10px 6px;text-align:center;'><div style='font-size:1.3rem;'>✅</div><div style='font-size:0.62rem;color:#55aa55;font-weight:600;letter-spacing:0.05em;'>BULL</div><div style='font-size:0.62rem;color:#666;margin-top:4px;'>{_lbl}</div></div>", unsafe_allow_html=True)
+                        elif _v == 0:
+                            st.markdown(f"<div style='background:#111;border:1px solid #1e1e1e;border-radius:6px;padding:10px 6px;text-align:center;'><div style='font-size:1.3rem;'>❌</div><div style='font-size:0.62rem;color:#aa3333;font-weight:600;letter-spacing:0.05em;'>BEAR</div><div style='font-size:0.62rem;color:#666;margin-top:4px;'>{_lbl}</div></div>", unsafe_allow_html=True)
+                        else:
+                            st.markdown(f"<div style='background:#111;border:1px solid #1e1e1e;border-radius:6px;padding:10px 6px;text-align:center;'><div style='font-size:1.3rem;color:#444;'>—</div><div style='font-size:0.62rem;color:#444;letter-spacing:0.05em;'>N/A</div><div style='font-size:0.62rem;color:#666;margin-top:4px;'>{_lbl}</div></div>", unsafe_allow_html=True)
+        except Exception as _e:
+            st.warning(f"Market risk indicators unavailable: {_e}")
+
+        # ── Buy The Dip Signals Grid ──────────────────────────────────────────
+        st.subheader("Buy The Dip Signals")
+        _btd_map = [
+            ("Percent Above 5DMA Signal", "% R3000 > 5D MA"),
+            ("ACWI Oscillator Signal",    "ACWI Oscillator"),
+            ("McClellan Oscillator Signal","A/D Ratio"),
+            ("Equity PC Zscore Signal",   "Put/Call Ratio"),
+            ("CNN Fear Greed Signal",     "Fear & Greed"),
+            ("Lowry Panic Signal",        "Lowry Panic"),
+            ("Zweig Breadth Signal",      "Zweig Breadth"),
+            ("Volatility Curve Signal",   "VIX Term Structure"),
+            ("52W Highs Signal",          "S&P 52W Highs"),
+        ]
+        if "btd_composite" in st.session_state:
+            _df_btd2 = st.session_state.btd_composite
+            for _i in range(0, len(_btd_map), 6):
+                _row = st.columns(6)
+                for _j, (_sc, _lbl) in enumerate(_btd_map[_i:_i+6]):
+                    _s = _df_btd2[_sc].dropna() if _sc in _df_btd2.columns else pd.Series(dtype=float)
+                    _v = int(_s.iloc[-1]) if len(_s) else None
+                    with _row[_j]:
+                        if _v == 1:
+                            st.markdown(f"<div style='background:#111;border:1px solid #1e1e1e;border-radius:6px;padding:10px 6px;text-align:center;'><div style='font-size:1.3rem;'>✅</div><div style='font-size:0.62rem;color:#55aa55;font-weight:600;letter-spacing:0.05em;'>ACTIVE</div><div style='font-size:0.62rem;color:#666;margin-top:4px;'>{_lbl}</div></div>", unsafe_allow_html=True)
+                        else:
+                            st.markdown(f"<div style='background:#111;border:1px solid #1e1e1e;border-radius:6px;padding:10px 6px;text-align:center;'><div style='font-size:1.3rem;'>❌</div><div style='font-size:0.62rem;color:#444;letter-spacing:0.05em;'>OFF</div><div style='font-size:0.62rem;color:#666;margin-top:4px;'>{_lbl}</div></div>", unsafe_allow_html=True)
+        else:
+            st.caption("Open the Buy The Dip tab to load indicator signals.")
+
     except Exception as e:
         st.error(f"Could not load overview data: {e}")
 

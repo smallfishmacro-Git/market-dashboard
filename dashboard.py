@@ -190,7 +190,6 @@ if st.button("🔄", type="primary"):
 st.divider()
 
 # ── Tabs ───────────────────────────────────────────────────────────────────────
-# IMPORTANT: Heavy tabs (Market Risk, Buy the Dip) use lazy loading.
 # Their render() is only called when the user is on that tab.
 # This prevents WebSocket timeouts caused by running all tabs simultaneously.
 
@@ -291,6 +290,8 @@ with tab1:
             }
             _ind_cols = [c for c in _ind.columns if c != "S&P500"]
             for _i in range(0, len(_ind_cols), 6):
+                if _i > 0:
+                    st.markdown('<div style="height:10px"></div>', unsafe_allow_html=True)
                 _row = st.columns(6)
                 for _j, _cn in enumerate(_ind_cols[_i:_i+6]):
                     _s = _ind[_cn].dropna()
@@ -298,11 +299,11 @@ with tab1:
                     _lbl = _ind_labels.get(_cn, _cn)
                     with _row[_j]:
                         if _v == 1:
-                            st.markdown(f"<div style='background:#0e0e0e;border:1px solid #00ff88;border-radius:6px;padding:10px 6px;text-align:center;'><div style='font-size:1.5rem;color:#00ff88;font-weight:bold;line-height:1.2;'>&#10003;</div><div style='font-size:0.62rem;color:#00ff88;font-weight:600;letter-spacing:0.05em;'>BULL</div><div style='font-size:0.60rem;color:#555;margin-top:4px;'>{_lbl}</div></div>", unsafe_allow_html=True)
+                            st.markdown(f"<div style='background:#0e0e0e;border:1px solid #00ff88;border-radius:6px;padding:16px 10px;text-align:center;margin-bottom:10px;'><div style='font-size:1.5rem;color:#00ff88;font-weight:bold;line-height:1.2;'>&#10003;</div><div style='font-size:0.62rem;color:#00ff88;font-weight:600;letter-spacing:0.05em;margin-top:6px;'>BULL</div><div style='font-size:0.60rem;color:#555;margin-top:8px;'>{_lbl}</div></div>", unsafe_allow_html=True)
                         elif _v == 0:
-                            st.markdown(f"<div style='background:#0e0e0e;border:1px solid #ff4444;border-radius:6px;padding:10px 6px;text-align:center;'><div style='font-size:1.5rem;color:#ff4444;font-weight:bold;line-height:1.2;'>&#10007;</div><div style='font-size:0.62rem;color:#ff4444;font-weight:600;letter-spacing:0.05em;'>BEAR</div><div style='font-size:0.60rem;color:#555;margin-top:4px;'>{_lbl}</div></div>", unsafe_allow_html=True)
+                            st.markdown(f"<div style='background:#0e0e0e;border:1px solid #ff4444;border-radius:6px;padding:16px 10px;text-align:center;margin-bottom:10px;'><div style='font-size:1.5rem;color:#ff4444;font-weight:bold;line-height:1.2;'>&#10007;</div><div style='font-size:0.62rem;color:#ff4444;font-weight:600;letter-spacing:0.05em;margin-top:6px;'>BEAR</div><div style='font-size:0.60rem;color:#555;margin-top:8px;'>{_lbl}</div></div>", unsafe_allow_html=True)
                         else:
-                            st.markdown(f"<div style='background:#0e0e0e;border:1px solid #333;border-radius:6px;padding:10px 6px;text-align:center;'><div style='font-size:1.5rem;color:#555;line-height:1.2;'>—</div><div style='font-size:0.62rem;color:#555;letter-spacing:0.05em;'>N/A</div><div style='font-size:0.60rem;color:#555;margin-top:4px;'>{_lbl}</div></div>", unsafe_allow_html=True)
+                            st.markdown(f"<div style='background:#0e0e0e;border:1px solid #333;border-radius:6px;padding:16px 10px;text-align:center;margin-bottom:10px;'><div style='font-size:1.5rem;color:#555;line-height:1.2;'>—</div><div style='font-size:0.62rem;color:#555;letter-spacing:0.05em;'>N/A</div><div style='font-size:0.60rem;color:#555;margin-top:8px;'>{_lbl}</div></div>", unsafe_allow_html=True)
         except Exception as _e:
             st.warning(f"Market risk indicators unavailable: {_e}")
 
@@ -322,15 +323,17 @@ with tab1:
         if "btd_composite" in st.session_state:
             _df_btd2 = st.session_state.btd_composite
             for _i in range(0, len(_btd_map), 6):
+                if _i > 0:
+                    st.markdown('<div style="height:10px"></div>', unsafe_allow_html=True)
                 _row = st.columns(6)
                 for _j, (_sc, _lbl) in enumerate(_btd_map[_i:_i+6]):
                     _s = _df_btd2[_sc].dropna() if _sc in _df_btd2.columns else pd.Series(dtype=float)
                     _v = int(_s.iloc[-1]) if len(_s) else None
                     with _row[_j]:
                         if _v == 1:
-                            st.markdown(f"<div style='background:#0e0e0e;border:1px solid #00ff88;border-radius:6px;padding:10px 6px;text-align:center;'><div style='font-size:1.5rem;color:#00ff88;font-weight:bold;line-height:1.2;'>&#10003;</div><div style='font-size:0.62rem;color:#00ff88;font-weight:600;letter-spacing:0.05em;'>ACTIVE</div><div style='font-size:0.60rem;color:#555;margin-top:4px;'>{_lbl}</div></div>", unsafe_allow_html=True)
+                            st.markdown(f"<div style='background:#0e0e0e;border:1px solid #00ff88;border-radius:6px;padding:16px 10px;text-align:center;margin-bottom:10px;'><div style='font-size:1.5rem;color:#00ff88;font-weight:bold;line-height:1.2;'>&#10003;</div><div style='font-size:0.62rem;color:#00ff88;font-weight:600;letter-spacing:0.05em;margin-top:6px;'>ACTIVE</div><div style='font-size:0.60rem;color:#555;margin-top:8px;'>{_lbl}</div></div>", unsafe_allow_html=True)
                         else:
-                            st.markdown(f"<div style='background:#0e0e0e;border:1px solid #ff4444;border-radius:6px;padding:10px 6px;text-align:center;'><div style='font-size:1.5rem;color:#ff4444;font-weight:bold;line-height:1.2;'>&#10007;</div><div style='font-size:0.62rem;color:#ff4444;letter-spacing:0.05em;'>OFF</div><div style='font-size:0.60rem;color:#555;margin-top:4px;'>{_lbl}</div></div>", unsafe_allow_html=True)
+                            st.markdown(f"<div style='background:#0e0e0e;border:1px solid #ff4444;border-radius:6px;padding:16px 10px;text-align:center;margin-bottom:10px;'><div style='font-size:1.5rem;color:#ff4444;font-weight:bold;line-height:1.2;'>&#10007;</div><div style='font-size:0.62rem;color:#ff4444;letter-spacing:0.05em;'>OFF</div><div style='font-size:0.60rem;color:#555;margin-top:8px;'>{_lbl}</div></div>", unsafe_allow_html=True)
         else:
             st.caption("Open the Buy The Dip tab to load indicator signals.")
 
@@ -347,22 +350,10 @@ with tab3:
     st.subheader("Volatility")
     st.info("Charts coming soon.")
 
-# ── TAB 4: MARKET RISK (lazy loaded) ──────────────────────────────────────────
+# ── TAB 4: MARKET RISK ────────────────────────────────────────────────────────
 with tab4:
-    # Lazy load: only import and render when this tab is actually visible.
-    # The placeholder + button pattern prevents the heavy render() from
-    # blocking the entire dashboard on startup.
-    if "market_risk_loaded" not in st.session_state:
-        st.session_state.market_risk_loaded = False
-
-    if not st.session_state.market_risk_loaded:
-        st.info("Click below to load the Market Risk tab.")
-        if st.button("🚨 Load Market Risk", type="primary", key="load_mr"):
-            st.session_state.market_risk_loaded = True
-            st.rerun()
-    else:
-        import tab_market_risk
-        tab_market_risk.render()
+    import tab_market_risk
+    tab_market_risk.render()
 
 # ── TAB 5: MACRO / REGIME ─────────────────────────────────────────────────────
 with tab5:

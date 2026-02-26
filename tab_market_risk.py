@@ -367,8 +367,9 @@ def _compute_supertrend(atr_period, multiplier, log=print):
 def _compute_vix_hmm_combined(vts_trend, hmm_trend):
     if vts_trend is None or hmm_trend is None:
         return None
-    combined = (vts_trend.shift(1).fillna(0) *
-                (1 - hmm_trend).shift(1).fillna(0)).clip(0, 1).astype(int)
+    vts = vts_trend["Trend"].shift(1).fillna(0)
+    hmm = hmm_trend["Trend"].shift(1).fillna(0)
+    combined = (vts + hmm).clip(0, 1).astype(int)
     return pd.DataFrame({"Trend": combined})
 
 # ══════════════════════════════════════════════════════════════════════════════

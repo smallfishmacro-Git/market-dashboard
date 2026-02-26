@@ -32,7 +32,7 @@ else:
     BASE_DIR = _LOCAL_DIR
 BARCHART = os.path.join(BASE_DIR, "data", "barchart")
 DATASETS = os.path.join(BASE_DIR, "data", "datasets")
-FRED_KEY = "5ccedb95e2418de2e5b7bae928c4e406"
+FRED_KEY = st.secrets.get("FRED_KEY", "5ccedb95e2418de2e5b7bae928c4e406")
 
 CSV_LT  = os.path.join(DATASETS, "market_risk_lt_composite.csv")
 CSV_THM = os.path.join(DATASETS, "market_risk_health_model.csv")

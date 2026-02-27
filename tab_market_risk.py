@@ -202,9 +202,7 @@ def _compute_canary(log=print):
     avail = [t for t in tickers if t in di.columns]
     result = pd.DataFrame({f"{t}_t": (di[t] > 0).astype(int) for t in avail},
                           index=di.index)
-    # Signal = 1 if SPY and at least one of EEM/EFA positive (BND optional 4th)
-    # Require 3 out of 4: SPY + EEM + EFA all positive, BND secondary
-    result["Trend"] = (result.sum(axis=1) >= 3).astype(int)
+    result["Trend"] = (result.sum(axis=1) == len(avail)).astype(int)
     log("  Canary done.")
     return result
 
@@ -318,11 +316,8 @@ def _compute_quad(log=print):
         raise ValueError("yfinance returned empty dataframe for Quad tickers")
     prices = (data["Close"] if not isinstance(data.columns, pd.MultiIndex)
               else data["Close"])
-    sma         = prices.rolling(62, min_periods=62).mean()
-    valid_count = prices.notna().sum(axis=1)
-    above_sma   = (prices > sma).sum(axis=1)  # NaN > NaN = False = 0
-    # Majority of valid (non-NaN) tickers must be above SMA; need ≥5 tickers to avoid weekend noise
-    trend = ((above_sma > valid_count / 2) & (valid_count >= 5)).astype(int)
+    sma   = prices.rolling(62).mean()
+    trend = ((prices > sma).sum(axis=1) > len(prices.columns) / 2).astype(int)
     log("  Quad done.")
     return pd.DataFrame({"Trend": trend})
 

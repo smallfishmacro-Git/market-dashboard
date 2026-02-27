@@ -202,7 +202,9 @@ def _compute_canary(log=print):
     avail = [t for t in tickers if t in di.columns]
     result = pd.DataFrame({f"{t}_t": (di[t] > 0).astype(int) for t in avail},
                           index=di.index)
-    result["Trend"] = (result.sum(axis=1) == len(avail)).astype(int)
+    # Signal = 1 if SPY and at least one of EEM/EFA positive (BND optional 4th)
+    # Require 3 out of 4: SPY + EEM + EFA all positive, BND secondary
+    result["Trend"] = (result.sum(axis=1) >= 3).astype(int)
     log("  Canary done.")
     return result
 
@@ -223,20 +225,23 @@ def _compute_acwi_200sma(log=print):
     data   = yf.download(etfs, start="2007-01-01", progress=False, timeout=30)
     prices = (data["Close"] if not isinstance(data.columns, pd.MultiIndex)
               else data.xs("Close", axis=1, level=0))
+    valid  = prices.notna().sum(axis=1)
+
+    # 10-day MA — for BTD oscillator (acwi_oscillator.csv, signals when 0%)
+    sma10  = prices.rolling(10, min_periods=10).mean()
+    osc10  = ((prices > sma10).sum(axis=1) / valid * 100).dropna()
+
+    # 200-day SMA — for ACWI_200 market risk indicator (Trend = osc > 50%)
     sma200 = prices.rolling(200, min_periods=200).mean()
-    osc    = (prices > sma200).sum(axis=1) / prices.notna().sum(axis=1) * 100
-    osc    = osc.dropna()
-    if len(osc) == 0:
-        log("  ACWI 200 SMA: no data returned (SSL/network issue), keeping existing CSV")
-        if os.path.exists(path):
-            existing = pd.read_csv(path, index_col=0, parse_dates=True)
-            return pd.DataFrame({"Pct": existing["Percentage"],
-                                 "Trend": (existing["Percentage"] > 50).astype(int)})
-        return None
-    # Save with "Percentage" column for BTD tab / data_updater compatibility
-    pd.DataFrame({"Percentage": osc}).to_csv(path)
-    log(f"  ACWI 200 SMA done. Saved {len(osc)} rows → {path}")
-    return pd.DataFrame({"Pct": osc, "Trend": (osc > 50).astype(int)})
+    osc200 = ((prices > sma200).sum(axis=1) / valid * 100).dropna()
+
+    if len(osc10) == 0:
+        log("  ACWI: no data returned (SSL/network issue), keeping existing CSV")
+        return None  # baseline in compute_and_save_all preserves existing ACWI_200
+    # Save 10-day MA oscillator to acwi_oscillator.csv (BTD tab reads "Percentage")
+    pd.DataFrame({"Percentage": osc10}).to_csv(path)
+    log(f"  ACWI done. Saved {len(osc10)} rows (10-day MA) → {path}")
+    return pd.DataFrame({"Pct": osc200, "Trend": (osc200 > 50).astype(int)})
 
 def _compute_adl():
     adv = _load_bc("NYSE_Advancing_Stocks_$NSHU.csv")["Last"]
@@ -313,8 +318,11 @@ def _compute_quad(log=print):
         raise ValueError("yfinance returned empty dataframe for Quad tickers")
     prices = (data["Close"] if not isinstance(data.columns, pd.MultiIndex)
               else data["Close"])
-    sma   = prices.rolling(62).mean()
-    trend = ((prices > sma).sum(axis=1) > len(prices.columns) / 2).astype(int)
+    sma         = prices.rolling(62, min_periods=62).mean()
+    valid_count = prices.notna().sum(axis=1)
+    above_sma   = (prices > sma).sum(axis=1)  # NaN > NaN = False = 0
+    # Majority of valid (non-NaN) tickers must be above SMA; need ≥5 tickers to avoid weekend noise
+    trend = ((above_sma > valid_count / 2) & (valid_count >= 5)).astype(int)
     log("  Quad done.")
     return pd.DataFrame({"Trend": trend})
 

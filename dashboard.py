@@ -100,6 +100,15 @@ def load_bc(filename):
     df["Last"] = pd.to_numeric(df["Last"], errors="coerce")
     return df
 
+@st.cache_data(ttl=3600)
+def load_btd_signals():
+    path = os.path.join(DATASETS, "btd_signals.csv")
+    if not os.path.exists(path):
+        return None
+    df = pd.read_csv(path, parse_dates=True, index_col=0)
+    df.index = pd.to_datetime(df.index, errors="coerce")
+    return df[df.index.notna()].sort_index()
+
 def last_val(df): return df["Last"].dropna().iloc[-1]
 def delta(df):
     s = df["Last"].dropna()
@@ -251,15 +260,15 @@ with tab1:
         except Exception as _re:
             st.warning(f"Regime scores unavailable: {_re}")
 
-        # ── BTD Score from Buy The Dip composite ─────────────────────────────
+        # ── BTD Score from pre-computed btd_signals.csv ───────────────────────
         try:
-            if "btd_composite" in st.session_state:
-                _df_btd  = st.session_state.btd_composite
+            _df_btd = load_btd_signals()
+            if _df_btd is not None and "Composite" in _df_btd.columns:
                 _btd_now = int(_df_btd["Composite"].iloc[-1])
                 _btd_lbl = "🔥 Elevated" if _btd_now >= 3 else ("⚠️ Moderate" if _btd_now >= 1 else "Normal")
                 rc3.metric("BTD Score", f"{_btd_now} / 9", delta=_btd_lbl)
             else:
-                rc3.metric("BTD Score", "— / 9", delta="Open BTD tab to load")
+                rc3.metric("BTD Score", "— / 9", delta="No data")
         except Exception:
             pass
 
@@ -320,8 +329,8 @@ with tab1:
             ("Volatility Curve Signal",   "VIX Term Structure"),
             ("52W Highs Signal",          "S&P 52W Highs"),
         ]
-        if "btd_composite" in st.session_state:
-            _df_btd2 = st.session_state.btd_composite
+        _df_btd2 = load_btd_signals()
+        if _df_btd2 is not None:
             for _i in range(0, len(_btd_map), 6):
                 if _i > 0:
                     st.markdown('<div style="height:10px"></div>', unsafe_allow_html=True)
@@ -335,7 +344,7 @@ with tab1:
                         else:
                             st.markdown(f"<div style='background:#0e0e0e;border:1px solid #ff4444;border-radius:6px;padding:16px 10px;text-align:center;margin-bottom:10px;'><div style='font-size:1.5rem;color:#ff4444;font-weight:bold;line-height:1.2;'>&#10007;</div><div style='font-size:0.62rem;color:#ff4444;letter-spacing:0.05em;'>OFF</div><div style='font-size:0.60rem;color:#555;margin-top:8px;'>{_lbl}</div></div>", unsafe_allow_html=True)
         else:
-            st.caption("Open the Buy The Dip tab to load indicator signals.")
+            st.caption("Run data_updater.py to generate BTD signals.")
 
     except Exception as e:
         st.error(f"Could not load overview data: {e}")

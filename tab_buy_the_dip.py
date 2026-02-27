@@ -83,6 +83,7 @@ def yax(color=WHITE, log=False, grid=False):
     )
 
 # ── Helpers ──────────────────────────────────────────────────────────────────────
+@st.cache_data(ttl=3600)
 def load_bc(filename):
     path = os.path.join(BARCHART, filename)
     df = pd.read_csv(path, parse_dates=True, index_col=0)

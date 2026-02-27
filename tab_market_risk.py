@@ -244,7 +244,9 @@ def _compute_acwi_200sma(log=print):
 def _compute_adl():
     adv = _load_bc("NYSE_Advancing_Stocks_$NSHU.csv")["Last"]
     dec = _load_bc("NYSE_Declining_Stocks_$NSHD.csv")["Last"]
-    cum = (adv - dec).dropna().cumsum()
+    daily_net = (adv - dec).dropna()
+    daily_net = daily_net[daily_net.index >= "2005-03-01"]  # match Colab START_DATE
+    cum = daily_net.cumsum()
     sma = cum.rolling(200, min_periods=200).mean()
     return pd.DataFrame({"CumAD": cum, "Trend": (cum > sma).astype(int)})
 
@@ -316,6 +318,9 @@ def _compute_quad(log=print):
         raise ValueError("yfinance returned empty dataframe for Quad tickers")
     prices = (data["Close"] if not isinstance(data.columns, pd.MultiIndex)
               else data["Close"])
+    # Reindex to equity market dates: drop weekends/holidays where only BTC-USD has data
+    equity_cols = [t for t in tickers if t != "BTC-USD" and t in prices.columns]
+    prices = prices.dropna(subset=equity_cols)
     sma   = prices.rolling(62).mean()
     trend = ((prices > sma).sum(axis=1) > len(prices.columns) / 2).astype(int)
     log("  Quad done.")

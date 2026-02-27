@@ -779,8 +779,8 @@ def render():
     comp_now   = df_thm["Trend_Composite"].dropna().iloc[-1]
     _thm_last  = df_thm[ind_thm].iloc[-1]
     _lt_last   = df_lt[lt_ind_cols2].reindex(df_thm.index).ffill().iloc[-1]
-    bull_count = int(_thm_last.gt(0).sum()) + int(_lt_last.gt(0).sum())
-    total_ind  = int(_thm_last.notna().sum()) + int(_lt_last.notna().sum())
+    bull_count = int(_thm_last.gt(0).sum())
+    total_ind  = len(ind_thm)
     regime_chg = df_thm.index[df_thm["Trend"].diff().abs() > 0]
     c1, c2, c3 = st.columns(3)
     c1.metric("Health Score", f"{comp_now:.0f}%",

@@ -32,7 +32,10 @@ else:
     BASE_DIR = _LOCAL_DIR
 BARCHART = os.path.join(BASE_DIR, "data", "barchart")
 DATASETS = os.path.join(BASE_DIR, "data", "datasets")
-FRED_KEY = st.secrets.get("FRED_KEY", "5ccedb95e2418de2e5b7bae928c4e406")
+try:
+    FRED_KEY = st.secrets.get("FRED_KEY", "5ccedb95e2418de2e5b7bae928c4e406")
+except Exception:
+    FRED_KEY = "5ccedb95e2418de2e5b7bae928c4e406"
 
 CSV_LT  = os.path.join(DATASETS, "market_risk_lt_composite.csv")
 CSV_THM = os.path.join(DATASETS, "market_risk_health_model.csv")
@@ -90,7 +93,7 @@ def _load_spx():
         elif c in ("low", "lo"):          rn[c] = "low"
     return df.rename(columns=rn)
 
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=3600)
 def _read_cache(path):
     if not os.path.exists(path):
         return None
@@ -207,14 +210,8 @@ def _compute_pct_above_200():
     return df
 
 def _compute_acwi_200sma(log=print):
-    path = os.path.join(DATASETS, "acwi_oscillator.csv")
-    if os.path.exists(path):
-        log("  ACWI 200 SMA: reading from acwi_oscillator.csv")
-        osc = pd.read_csv(path, parse_dates=True, index_col=0).squeeze()
-        osc.index = pd.to_datetime(osc.index, errors="coerce")
-        osc = osc[osc.index.notna()].sort_index()
-        return pd.DataFrame({"Pct": osc, "Trend": (osc > 50).astype(int)})
     import yfinance as yf
+    path = os.path.join(DATASETS, "acwi_oscillator.csv")
     log("  Downloading ACWI 200 SMA (46 ETFs)...")
     etfs = ["EWA","EWO","EWK","EWC","EDEN","EFNL","EWQ","EWG","EWH","EIRL",
             "EIS","EWI","EWJ","EWN","ENZL","NORW","PGAL","EWS","EWP","EWD",
@@ -226,7 +223,17 @@ def _compute_acwi_200sma(log=print):
               else data.xs("Close", axis=1, level=0))
     sma200 = prices.rolling(200, min_periods=200).mean()
     osc    = (prices > sma200).sum(axis=1) / prices.notna().sum(axis=1) * 100
-    log("  ACWI 200 SMA done.")
+    osc    = osc.dropna()
+    if len(osc) == 0:
+        log("  ACWI 200 SMA: no data returned (SSL/network issue), keeping existing CSV")
+        if os.path.exists(path):
+            existing = pd.read_csv(path, index_col=0, parse_dates=True)
+            return pd.DataFrame({"Pct": existing["Percentage"],
+                                 "Trend": (existing["Percentage"] > 50).astype(int)})
+        return None
+    # Save with "Percentage" column for BTD tab / data_updater compatibility
+    pd.DataFrame({"Percentage": osc}).to_csv(path)
+    log(f"  ACWI 200 SMA done. Saved {len(osc)} rows → {path}")
     return pd.DataFrame({"Pct": osc, "Trend": (osc > 50).astype(int)})
 
 def _compute_adl():
@@ -421,6 +428,15 @@ def compute_and_save_all(log=print):
                 res["VIX_HMM"] = vh["Trend"]
         except Exception as e:
             log(f"  VIX×HMM failed: {e}")
+
+    # ── Normalize timezones (yfinance returns tz-aware; Barchart is tz-naive) ──
+    def _strip_tz(s):
+        if isinstance(s.index, pd.DatetimeIndex) and s.index.tz is not None:
+            s = s.copy()
+            s.index = s.index.tz_localize(None)
+        return s
+    res   = {k: _strip_tz(v) for k, v in res.items()}
+    spx_s = _strip_tz(spx_s)
 
     # ── Save individual signals ───────────────────────────────────────────────
     ind_df = pd.DataFrame(res)

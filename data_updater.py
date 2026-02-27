@@ -484,6 +484,19 @@ def run_update(log_fn=print):
         log_fn(f"  ❌  CNN Fear & Greed — ERROR: {e}")
         failed += 1
 
+    # Market Risk indicators (acwi_oscillator + 3 composite CSVs)
+    try:
+        from tab_market_risk import compute_and_save_all
+        log_fn("  Computing market risk indicators (~3-5 min)...")
+        ok = compute_and_save_all(log=log_fn)
+        if ok:
+            success += 1
+        else:
+            failed += 1
+    except Exception as e:
+        log_fn(f"  ❌  Market Risk compute — ERROR: {e}")
+        failed += 1
+
     # BTD signals
     try:
         ok = compute_btd_signals(log_fn)

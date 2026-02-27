@@ -193,7 +193,9 @@ def _compute_canary(log=print):
     import yfinance as yf
     log("  Downloading Canary (SPY/BND/EEM/EFA)...")
     tickers = ["SPY", "BND", "EEM", "EFA"]
-    data = yf.download(tickers, start="2003-01-01", progress=False)
+    data = yf.download(tickers, start="2003-01-01", progress=False, timeout=30)
+    if data.empty:
+        raise ValueError("yfinance returned empty dataframe for Canary tickers")
     prices = (data["Close"] if not isinstance(data.columns, pd.MultiIndex)
               else data.xs("Close", axis=1, level=0))
     di = sum(prices.pct_change(d) * m for d, m in [(21,12),(62,6),(126,2),(252,1)])
@@ -218,7 +220,7 @@ def _compute_acwi_200sma(log=print):
             "EWL","EWU","SPY","EWZ","ECH","MCHI","GXG","CEZ","EGPT","GREK",
             "INDA","EIDO","EWY","KWT","EWM","EWW","EPU","EPHE","EPOL","QAT",
             "KSA","EZA","EWT","THD","TUR","UAE"]
-    data   = yf.download(etfs, start="2007-01-01", progress=False)
+    data   = yf.download(etfs, start="2007-01-01", progress=False, timeout=30)
     prices = (data["Close"] if not isinstance(data.columns, pd.MultiIndex)
               else data.xs("Close", axis=1, level=0))
     sma200 = prices.rolling(200, min_periods=200).mean()
@@ -247,7 +249,9 @@ def _compute_inout(log=print):
     import yfinance as yf
     log("  Downloading In/Out tickers...")
     tickers = ["QQQ","XLI","DBB","IGE","SHY","UUP","GLD","SLV","XLU"]
-    data = yf.download(tickers, start="2002-01-01", progress=False)
+    data = yf.download(tickers, start="2002-01-01", progress=False, timeout=30)
+    if data.empty:
+        raise ValueError("yfinance returned empty dataframe for InOut tickers")
     prices = (data["Close"] if not isinstance(data.columns, pd.MultiIndex)
               else data.xs("Close", axis=1, level=0))
     rets = prices / prices.rolling(11, center=True).mean().shift(60) - 1
@@ -304,7 +308,9 @@ def _compute_quad(log=print):
     log("  Downloading Quad 1&2 tickers...")
     tickers = ["XLF","QQQ","SMH","BTC-USD","XLK","KRE","IWM"]
     data = yf.download(tickers, start="2014-01-01",
-                       auto_adjust=True, progress=False)
+                       auto_adjust=True, progress=False, timeout=30)
+    if data.empty:
+        raise ValueError("yfinance returned empty dataframe for Quad tickers")
     prices = (data["Close"] if not isinstance(data.columns, pd.MultiIndex)
               else data["Close"])
     sma   = prices.rolling(62).mean()
@@ -316,7 +322,9 @@ def _compute_btc(log=print):
     import yfinance as yf
     log("  Downloading BTC/SPY...")
     data = yf.download(["BTC-USD", "SPY"], start="2014-01-01",
-                       auto_adjust=True, progress=False)
+                       auto_adjust=True, progress=False, timeout=30)
+    if data.empty:
+        raise ValueError("yfinance returned empty dataframe for BTC/SPY")
     prices = (data["Close"] if not isinstance(data.columns, pd.MultiIndex)
               else data["Close"])
     try:
@@ -375,8 +383,9 @@ def _compute_supertrend(atr_period, multiplier, log=print):
 def _compute_vix_hmm_combined(vts_trend, hmm_trend):
     if vts_trend is None or hmm_trend is None:
         return None
-    vts = vts_trend["Trend"].shift(1).fillna(0)
-    hmm = hmm_trend["Trend"].shift(1).fillna(0)
+    # Accept either a DataFrame (with "Trend" column) or a plain Series
+    vts = (vts_trend["Trend"] if isinstance(vts_trend, pd.DataFrame) else vts_trend).shift(1).fillna(0)
+    hmm = (hmm_trend["Trend"] if isinstance(hmm_trend, pd.DataFrame) else hmm_trend).shift(1).fillna(0)
     combined = (vts + hmm).clip(0, 1).astype(int)
     return pd.DataFrame({"Trend": combined})
 
@@ -392,7 +401,20 @@ def compute_and_save_all(log=print):
     log("=== Market Risk: starting full computation ===")
     spx   = _load_spx()
     spx_s = spx["last"].dropna()
-    res   = {}  # name -> Trend Series
+
+    # Seed res from existing CSV so failed indicators keep historical data
+    res = {}
+    _existing_ind = os.path.join(DATASETS, "market_risk_indicators.csv")
+    if os.path.exists(_existing_ind):
+        try:
+            _base = pd.read_csv(_existing_ind, index_col=0, parse_dates=True)
+            _base.index = pd.to_datetime(_base.index, errors="coerce")
+            _base = _base[_base.index.notna()].sort_index()
+            for _col in _base.columns:
+                res[_col] = _base[_col].dropna()
+            log(f"  Loaded {len(_base.columns)} existing indicator columns as baseline")
+        except Exception as _e:
+            log(f"  Could not load existing indicators CSV: {_e}")
 
     def try_compute(name, fn, *args, **kwargs):
         try:

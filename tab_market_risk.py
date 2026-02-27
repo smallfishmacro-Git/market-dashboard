@@ -90,7 +90,7 @@ def _load_spx():
         elif c in ("low", "lo"):          rn[c] = "low"
     return df.rename(columns=rn)
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=60)
 def _read_cache(path):
     if not os.path.exists(path):
         return None

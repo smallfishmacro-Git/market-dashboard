@@ -240,7 +240,7 @@ def compute_vix_hmm(log_fn=print):
         ratio     = (vix["Last"] / vxv["Last"]).dropna()
         ema_fast  = ratio.ewm(span=7,  adjust=False).mean()
         ema_slow  = ratio.ewm(span=12, adjust=False).mean()
-        vix_trend = (ema_fast > ema_slow).astype(int)
+        vix_trend = (ema_fast < ema_slow).astype(int)
         vix_trend_signal = vix_trend.shift(1).fillna(0).astype(int)
 
         # ── HMM Signal ───────────────────────────────────────────────────────

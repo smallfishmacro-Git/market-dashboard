@@ -199,6 +199,109 @@ def update_cnn_fear_greed(log_fn=print):
     return True
 
 
+# ── VIX_HMM signal computation ──────────────────────────────────────────────────
+def compute_vix_hmm(log_fn=print):
+    """
+    Computes the correct VIX_HMM overlay signal and updates VIX_HMM column in
+    data/datasets/market_risk_indicators.csv.
+
+    Logic (Overlay_LongIfBullElseVIXxBear):
+      VIX_HMM = 1                          if HMM Bull
+      VIX_HMM = VIXTrend * HMM_Bear        if HMM Bear
+    """
+    import numpy as np
+    try:
+        from hmmlearn.hmm import GaussianHMM
+    except ImportError:
+        log_fn("  ⚠️  hmmlearn not installed — skipping VIX_HMM update")
+        return False
+
+    def _load(filename):
+        path = os.path.join(BARCHART, filename)
+        if not os.path.exists(path):
+            return None
+        df = pd.read_csv(path, parse_dates=True, index_col=0)
+        df.index = pd.to_datetime(df.index, errors="coerce")
+        df = df[df.index.notna()].sort_index()
+        df["Last"] = pd.to_numeric(df["Last"].astype(str).str.replace(",", ""), errors="coerce")
+        return df
+
+    log_fn("  Computing VIX_HMM signal (HMM training ~30s)...")
+    try:
+        spx = _load("S&P_500_Index_$SPX.csv")
+        vix = _load("CBOE_Volatility_Index_$VIX.csv")
+        vxv = _load("CBOE_3-Month_VIX_$VXV.csv")
+
+        if any(x is None for x in [spx, vix, vxv]):
+            log_fn("  ⚠️  VIX_HMM: SPX/VIX/VXV CSVs missing, skipping.")
+            return False
+
+        # ── VIX Term Structure Signal ────────────────────────────────────────
+        ratio     = (vix["Last"] / vxv["Last"]).dropna()
+        ema_fast  = ratio.ewm(span=7,  adjust=False).mean()
+        ema_slow  = ratio.ewm(span=12, adjust=False).mean()
+        vix_trend = (ema_fast < ema_slow).astype(int)
+        vix_trend_signal = vix_trend.shift(1).fillna(0).astype(int)
+
+        # ── HMM Signal ───────────────────────────────────────────────────────
+        spx_full = spx[spx.index >= "1960-01-01"]["Last"].dropna().sort_index()
+        returns  = spx_full.pct_change().dropna()
+
+        # Train on 1960-01-01 to 2024-12-31
+        train_returns = returns[returns.index <= "2024-12-31"]
+        train_data    = train_returns.values.reshape(-1, 1)
+
+        hmm_model = GaussianHMM(n_components=2, covariance_type="full",
+                                n_iter=300, random_state=17)
+        hmm_model.fit(train_data)
+
+        bull_state = int(np.argmax(hmm_model.means_.ravel()))
+        bear_state = 1 - bull_state
+
+        # Predict states for all available returns (including post-2024)
+        all_states = hmm_model.predict(returns.values.reshape(-1, 1))
+        states_s   = pd.Series(all_states, index=returns.index)
+
+        hmm_bull = (states_s == bull_state).astype(int).shift(1).fillna(0).astype(int)
+        hmm_bear = (states_s == bear_state).astype(int).shift(1).fillna(0).astype(int)
+
+        # ── Combined Signal ──────────────────────────────────────────────────
+        common = vix_trend_signal.index.intersection(hmm_bull.index)
+        vts_a  = vix_trend_signal.reindex(common)
+        bull_a = hmm_bull.reindex(common)
+        bear_a = hmm_bear.reindex(common)
+
+        vix_hmm = pd.Series(
+            np.where(bull_a == 1, 1, vts_a * bear_a),
+            index=common,
+            name="VIX_HMM",
+        )
+
+        # ── Update market_risk_indicators.csv ────────────────────────────────
+        ind_path = os.path.join(DATASETS, "market_risk_indicators.csv")
+        if not os.path.exists(ind_path):
+            log_fn("  ⚠️  VIX_HMM: market_risk_indicators.csv not found, skipping.")
+            return False
+
+        df = pd.read_csv(ind_path, parse_dates=True, index_col=0)
+        df.index = pd.to_datetime(df.index, errors="coerce")
+        df = df[df.index.notna()].sort_index()
+
+        df["VIX_HMM"] = vix_hmm.reindex(df.index)
+        df.to_csv(ind_path)
+
+        # ── Verification ─────────────────────────────────────────────────────
+        cutoff    = pd.Timestamp.now() - pd.DateOffset(years=5)
+        recent    = vix_hmm[vix_hmm.index >= cutoff].dropna()
+        pct_bull  = recent.mean() * 100 if len(recent) else 0.0
+        log_fn(f"  ✅  VIX_HMM updated. Last 5yr bull%: {pct_bull:.1f}%")
+        return True
+
+    except Exception as e:
+        log_fn(f"  ❌  VIX_HMM — ERROR: {e}")
+        return False
+
+
 # ── BTD signal computation ───────────────────────────────────────────────────────
 def compute_btd_signals(log_fn=print):
     """
@@ -327,7 +430,18 @@ def compute_btd_signals(log_fn=print):
         sig_cols = [f"{n} Signal" for n in conditions]
         df["Composite"] = df[sig_cols].sum(axis=1)
 
-        out = df[sig_cols + ["Composite"]]
+        col_rename = {
+            "Percent Above 5DMA Signal":    "R3000_5D",
+            "ACWI Oscillator Signal":       "ACWI_Osc",
+            "McClellan Oscillator Signal":  "AD_Ratio",
+            "Equity PC Zscore Signal":      "PutCall",
+            "CNN Fear Greed Signal":        "FearGreed",
+            "Lowry Panic Signal":           "Lowry",
+            "Zweig Breadth Signal":         "Zweig",
+            "Volatility Curve Signal":      "VIX_TS",
+            "52W Highs Signal":             "SP500_Highs",
+        }
+        out = df[sig_cols + ["Composite"]].rename(columns=col_rename)
         out_path = os.path.join(DATASETS, "btd_signals.csv")
         out.to_csv(out_path)
         log_fn(f"  ✅  btd_signals.csv saved ({len(out)} rows, latest: {out.index[-1].date()})")
@@ -379,6 +493,17 @@ def run_update(log_fn=print):
             failed += 1
     except Exception as e:
         log_fn(f"  ❌  BTD signals — ERROR: {e}")
+        failed += 1
+
+    # VIX_HMM signal
+    try:
+        ok = compute_vix_hmm(log_fn)
+        if ok:
+            success += 1
+        else:
+            failed += 1
+    except Exception as e:
+        log_fn(f"  ❌  VIX_HMM — ERROR: {e}")
         failed += 1
 
     log_fn("=" * 60)

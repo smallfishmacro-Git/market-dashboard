@@ -319,15 +319,15 @@ with tab1:
         # ── Buy The Dip Signals Grid ──────────────────────────────────────────
         st.subheader("Buy The Dip Signals")
         _btd_map = [
-            ("Percent Above 5DMA Signal", "% R3000 > 5D MA"),
-            ("ACWI Oscillator Signal",    "ACWI Oscillator"),
-            ("McClellan Oscillator Signal","A/D Ratio"),
-            ("Equity PC Zscore Signal",   "Put/Call Ratio"),
-            ("CNN Fear Greed Signal",     "Fear & Greed"),
-            ("Lowry Panic Signal",        "Lowry Panic"),
-            ("Zweig Breadth Signal",      "Zweig Breadth"),
-            ("Volatility Curve Signal",   "VIX Term Structure"),
-            ("52W Highs Signal",          "S&P 52W Highs"),
+            ("R3000_5D",   "% R3000 > 5D MA"),
+            ("ACWI_Osc",   "ACWI Oscillator"),
+            ("AD_Ratio",   "A/D Ratio"),
+            ("PutCall",    "Put/Call Ratio"),
+            ("FearGreed",  "Fear & Greed"),
+            ("Lowry",      "Lowry Panic"),
+            ("Zweig",      "Zweig Breadth"),
+            ("VIX_TS",     "VIX Term Structure"),
+            ("SP500_Highs","S&P 52W Highs"),
         ]
         _df_btd2 = load_btd_signals()
         if _df_btd2 is not None:

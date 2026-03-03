@@ -768,26 +768,28 @@ def render():
 
     def _pill(val):
         if val == 1:
-            return ("<span style='border:1px solid #00c896;color:#00c896;"
-                    "border-radius:4px;padding:2px 10px;font-size:0.7rem;"
-                    "font-weight:500;'>Long</span>")
+            return ("<span style='background:#00c89626;border:1px solid #00c896;"
+                    "color:#00c896;border-radius:4px;padding:3px 12px;"
+                    "font-size:0.7rem;font-weight:600;'>Long</span>")
         elif val == 0:
-            return ("<span style='border:1px solid #ff4444;color:#ff4444;"
-                    "border-radius:4px;padding:2px 10px;font-size:0.7rem;"
-                    "font-weight:500;'>Short</span>")
+            return ("<span style='background:#ff444426;border:1px solid #ff4444;"
+                    "color:#ff4444;border-radius:4px;padding:3px 12px;"
+                    "font-size:0.7rem;font-weight:600;'>Short</span>")
         return ("<span style='border:1px solid #444;color:#555;"
-                "border-radius:4px;padding:2px 10px;font-size:0.7rem;"
-                "font-weight:500;'>—</span>")
+                "border-radius:4px;padding:3px 12px;"
+                "font-size:0.7rem;font-weight:600;'>—</span>")
 
-    def _build_table(section_title, rows):
-        th_s = ("text-align:left;padding:8px 12px 8px 0;"
-                "font-family:Inter,sans-serif;font-size:0.7rem;"
-                "font-weight:500;color:#888888;text-transform:uppercase;"
-                "letter-spacing:0.08em;white-space:nowrap;")
-        th_r = ("text-align:right;padding:8px 0 8px 12px;"
-                "font-family:Inter,sans-serif;font-size:0.7rem;"
-                "font-weight:500;color:#888888;text-transform:uppercase;"
-                "letter-spacing:0.08em;white-space:nowrap;")
+    def _build_table(section_title, rows, title_top_margin="0"):
+        hover_css = ("<style>.ind-tbl tr:hover td"
+                     "{background:#161616 !important;}</style>")
+        th_s = ("background:#0a0a0a;text-align:left;padding:10px 20px;"
+                "font-family:Inter,sans-serif;font-size:0.68rem;"
+                "font-weight:500;color:#555555;text-transform:uppercase;"
+                "letter-spacing:0.1em;white-space:nowrap;")
+        th_r = ("background:#0a0a0a;text-align:right;padding:10px 20px;"
+                "font-family:Inter,sans-serif;font-size:0.68rem;"
+                "font-weight:500;color:#555555;text-transform:uppercase;"
+                "letter-spacing:0.1em;white-space:nowrap;")
         thead = (f"<thead><tr style='border-bottom:1px solid #1e1e1e;'>"
                  f"<th style='{th_s}width:38%;'>Name</th>"
                  f"<th style='{th_s}width:20%;'>Last Change</th>"
@@ -795,31 +797,42 @@ def render():
                  f"<th style='{th_r}width:22%;'>Status</th>"
                  f"</tr></thead>")
         tbody = ""
-        for name, col, df_src in rows:
+        for idx, (name, col, df_src) in enumerate(rows):
+            row_bg = "#0a0a0a" if idx % 2 == 0 else "#111111"
             lc  = _last_change_date(df_src, col)
             lu  = _last_update_date(df_src, col)
             val = _get_signal(df_src, col)
             tbody += (
-                f"<tr style='border-bottom:1px solid #141414;'>"
-                f"<td style='padding:12px 12px 12px 0;font-family:Inter,sans-serif;"
-                f"font-size:0.85rem;color:#ffffff;'>{name}</td>"
-                f"<td style='padding:12px;font-family:Inter,sans-serif;"
-                f"font-size:0.8rem;color:#888888;'>{lc}</td>"
-                f"<td style='padding:12px;font-family:Inter,sans-serif;"
-                f"font-size:0.8rem;color:#888888;'>{lu}</td>"
-                f"<td style='padding:12px 0 12px 12px;text-align:right;'>"
-                f"{_pill(val)}</td></tr>"
+                f"<tr>"
+                f"<td style='background:{row_bg};padding:14px 20px;"
+                f"font-family:Inter,sans-serif;font-size:0.85rem;"
+                f"color:#e0e0e0;font-weight:400;'>{name}</td>"
+                f"<td style='background:{row_bg};padding:14px 20px;"
+                f"font-family:Inter,sans-serif;font-size:0.8rem;"
+                f"color:#888888;'>{lc}</td>"
+                f"<td style='background:{row_bg};padding:14px 20px;"
+                f"font-family:Inter,sans-serif;font-size:0.8rem;"
+                f"color:#888888;'>{lu}</td>"
+                f"<td style='background:{row_bg};padding:14px 20px;"
+                f"text-align:right;'>{_pill(val)}</td></tr>"
             )
         title_html = (
             f"<p style='font-family:Inter,sans-serif;font-size:0.75rem;"
             f"font-weight:600;color:#ff6600;text-transform:uppercase;"
-            f"letter-spacing:0.12em;margin:0 0 12px 0;'>{section_title}</p>"
+            f"letter-spacing:0.12em;margin:{title_top_margin} 0 12px 0;'>"
+            f"{section_title}</p>"
         )
         table_html = (
-            f"<table style='width:100%;border-collapse:collapse;"
-            f"background:#0a0a0a;'>{thead}<tbody>{tbody}</tbody></table>"
+            f"<table class='ind-tbl' style='width:100%;"
+            f"border-collapse:collapse;'>"
+            f"{thead}<tbody>{tbody}</tbody></table>"
         )
-        return f"<div style='margin-bottom:32px;'>{title_html}{table_html}</div>"
+        card_html = (
+            f"<div style='background:#0f0f0f;border:1px solid #1e1e1e;"
+            f"border-radius:12px;overflow:hidden;margin-bottom:24px;'>"
+            f"{table_html}</div>"
+        )
+        return f"{hover_css}{title_html}{card_html}"
 
     _lt_rows = [
         ("OECD CLI Diffusion Index",    "OECD_CLI",
@@ -847,7 +860,7 @@ def render():
         ("VIX Term Structure x HMM",        "VIX_HMM",   ind_df),
     ]
     st.markdown(_build_table("Long Term Indicators", _lt_rows),  unsafe_allow_html=True)
-    st.markdown(_build_table("Health Model Indicators", _thm_rows), unsafe_allow_html=True)
+    st.markdown(_build_table("Health Model Indicators", _thm_rows, title_top_margin="32px"), unsafe_allow_html=True)
 
     # ══════════════════════════════════════════════════════════════════════════
     #  SECTION 1 — Long Term Trend Composite

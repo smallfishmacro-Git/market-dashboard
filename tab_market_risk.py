@@ -261,8 +261,8 @@ def _compute_adl():
     common = adv.index.intersection(dec.index)
     daily_net = adv.reindex(common) - dec.reindex(common)
     cumulative_ad_line = daily_net.cumsum()
-    cumulative_ad_line_200sma = cumulative_ad_line.rolling(window=200, min_periods=200).mean()
-    adl_indicator = (cumulative_ad_line > cumulative_ad_line_200sma).astype(int)
+    cumulative_ad_line_100ema = cumulative_ad_line.ewm(span=100, adjust=False).mean()
+    adl_indicator = (cumulative_ad_line > cumulative_ad_line_100ema).astype(int)
     return pd.DataFrame({"CumAD": cumulative_ad_line, "Trend": adl_indicator})
 
 def _compute_inout(log=print):

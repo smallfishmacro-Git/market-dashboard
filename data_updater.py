@@ -413,8 +413,8 @@ def compute_adl(log_fn=print):
       - START_DATE = "2005-03-01"
       - Filter to START_DATE first, align on inner join, daily_net = adv - dec
       - cumulative_ad_line = daily_net.cumsum()
-      - cumulative_ad_line_200sma = rolling(200, min_periods=200).mean()
-      - adl_indicator = (cumulative_ad_line > cumulative_ad_line_200sma).astype(int)
+      - cumulative_ad_line_100ema = ewm(span=100, adjust=False).mean()
+      - adl_indicator = (cumulative_ad_line > cumulative_ad_line_100ema).astype(int)
     NOTE: the original Colab has a bug using 'trend_indicator' for spy_lime
     coloring instead of 'adl_indicator'; this implementation uses adl_indicator.
     Updates AD_Line column in data/datasets/market_risk_indicators.csv.
@@ -451,10 +451,8 @@ def compute_adl(log_fn=print):
         daily_net = adv.reindex(common) - dec.reindex(common)
 
         cumulative_ad_line     = daily_net.cumsum()
-        cumulative_ad_line_200sma = cumulative_ad_line.rolling(
-            window=200, min_periods=200
-        ).mean()
-        adl_indicator = (cumulative_ad_line > cumulative_ad_line_200sma).astype(int)
+        cumulative_ad_line_100ema = cumulative_ad_line.ewm(span=100, adjust=False).mean()
+        adl_indicator = (cumulative_ad_line > cumulative_ad_line_100ema).astype(int)
         adl_indicator.name = "AD_Line"
 
         # Update market_risk_indicators.csv

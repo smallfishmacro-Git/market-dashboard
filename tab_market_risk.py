@@ -702,8 +702,8 @@ def _ind_chart(title, ind_df, col, spx_s,
 #  RENDER
 # ══════════════════════════════════════════════════════════════════════════════
 def render():
-    st.subheader("📊 Market Risk — Regime Indicators")
-    st.caption("🟢 Lime = Bull regime  |  🔴 Red = Bear regime  "
+    st.subheader("Market Risk — Regime Indicators")
+    st.caption("Lime = Bull regime  |  Red = Bear regime  "
                "|  Long Term: Bull if ≥ 2/3 signals  "
                "|  Health Model: Bull if > 55%")
 
@@ -712,11 +712,11 @@ def render():
     # ── First-run: show compute button ────────────────────────────────────────
     if not csvs_ready:
         st.warning(
-            "⚠️ Market Risk CSVs not found. Run the **💾 Save Dashboard CSVs** "
+            "Market Risk CSVs not found. Run the **Save Dashboard CSVs** "
             "cell in the Colab notebook first, then click Refresh."
         )
         st.code(f"Looking in:\n  {CSV_LT}\n  {CSV_THM}\n  {CSV_IND}")
-        if st.button("🔄"):
+        if st.button("↻  Refresh"):
             st.rerun()
         return
 
@@ -735,20 +735,20 @@ def render():
 
     if df_lt is None or df_thm is None or ind_df is None or spx_s is None:
         st.error(f"Cached data missing or corrupted.")
-        st.code(f"CSV_LT:  {'✅' if df_lt  is not None else '❌'} {CSV_LT}\n"
-                f"CSV_THM: {'✅' if df_thm is not None else '❌'} {CSV_THM}\n"
-                f"CSV_IND: {'✅' if ind_df is not None else '❌'} {CSV_IND}")
+        st.code(f"CSV_LT:  {'OK' if df_lt  is not None else 'ERR'} {CSV_LT}\n"
+                f"CSV_THM: {'OK' if df_thm is not None else 'ERR'} {CSV_THM}\n"
+                f"CSV_IND: {'OK' if ind_df is not None else 'ERR'} {CSV_IND}")
         return
 
     # Refresh button — just clears cache and reloads from CSVs (fast)
-    if st.button("🔄"):
+    if st.button("↻  Refresh"):
         st.cache_data.clear()
         st.rerun()
 
     # ══════════════════════════════════════════════════════════════════════════
     #  SECTION 1 — Long Term Trend Composite
     # ══════════════════════════════════════════════════════════════════════════
-    st.markdown("### 🌍 Long Term Trend Composite")
+    st.markdown("### Long Term Trend Composite")
     st.plotly_chart(_chart_lt(df_lt), width='stretch')
 
     lt_ind_cols = [c for c in df_lt.columns
@@ -756,14 +756,14 @@ def render():
     latest_lt   = int(df_lt["Composite"].dropna().iloc[-1])
     c1, c2, c3  = st.columns(3)
     c1.metric("Composite Score", f"{latest_lt} / {len(lt_ind_cols)}",
-              delta="🟢 BULL" if df_lt["Trend"].dropna().iloc[-1] == 1 else "🔴 BEAR")
+              delta="BULL" if df_lt["Trend"].dropna().iloc[-1] == 1 else "BEAR")
     c2.metric("OECD CLI",
-              "BULL 🟢" if "OECD_CLI" in df_lt.columns
-              and df_lt["OECD_CLI"].iloc[-1] == 1 else "BEAR 🔴")
+              "BULL" if "OECD_CLI" in df_lt.columns
+              and df_lt["OECD_CLI"].iloc[-1] == 1 else "BEAR")
     c3.metric("Credit Spreads",
-              "BULL 🟢" if "Credit_Spreads" in df_lt.columns
+              "BULL" if "Credit_Spreads" in df_lt.columns
               and df_lt["Credit_Spreads"].iloc[-1] == 1
-              else "BEAR 🔴" if "Credit_Spreads" in df_lt.columns else "N/A ⚠️")
+              else "BEAR" if "Credit_Spreads" in df_lt.columns else "N/A")
 
     st.markdown("#### Individual Long Term Indicators")
     for title, col, ind_name, ind_col, label, start in [
@@ -784,7 +784,7 @@ def render():
     # ══════════════════════════════════════════════════════════════════════════
     #  SECTION 2 — Trend Health Model
     # ══════════════════════════════════════════════════════════════════════════
-    st.markdown("### 🩺 Trend Health Model")
+    st.markdown("### Trend Health Model")
     st.plotly_chart(_chart_thm(df_thm), width='stretch')
 
     ind_thm      = [col for col in df_thm.columns
@@ -799,7 +799,7 @@ def render():
     regime_chg = df_thm.index[df_thm["Trend"].diff().abs() > 0]
     c1, c2, c3 = st.columns(3)
     c1.metric("Health Score", f"{comp_now:.0f}%",
-              delta="🟢 BULL" if df_thm["Trend"].dropna().iloc[-1] == 1 else "🔴 BEAR")
+              delta="BULL" if df_thm["Trend"].dropna().iloc[-1] == 1 else "BEAR")
     c2.metric("Bullish Indicators", f"{bull_count} / {total_ind}")
     c3.metric("Last Regime Change",
               str(regime_chg[-1].date()) if len(regime_chg) > 0 else "N/A")

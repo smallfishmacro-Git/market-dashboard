@@ -442,12 +442,12 @@ def chart_composite(df):
 
 # ── Main render ──────────────────────────────────────────────────────────────────
 def render():
-    st.subheader("🎯 Buy the Dip — Oversold Signals")
-    st.caption("🟢 Lime triangles = buy signal triggered  |  Charts exclude weekends & holidays")
+    st.subheader("Buy the Dip — Oversold Signals")
+    st.caption("Lime triangles = buy signal triggered  |  Charts exclude weekends & holidays")
 
     spx = load_bc("S&P_500_Index_$SPX.csv")
 
-    st.markdown("### 🏆 Composite Signal — All 9 Indicators")
+    st.markdown("### Composite Signal — All 9 Indicators")
     # Use session state to avoid re-running build_composite() on every interaction
     if "btd_composite" not in st.session_state:
         with st.spinner("Building composite signal (first load only — cached after this)..."):
@@ -458,7 +458,7 @@ def render():
     latest = int(df_comp["Composite"].iloc[-1])
     col1, col2, col3 = st.columns(3)
     col1.metric("BTD Score", f"{latest} / 9",
-                delta="🔥 Elevated" if latest >= 3 else ("⚠️ Moderate" if latest >= 1 else "Normal"))
+                delta="Elevated" if latest >= 3 else ("Moderate" if latest >= 1 else "Normal"))
     active_dates = df_comp.index[df_comp["Composite"] > 0]
     col2.metric("Last Signal Date", str(active_dates[-1].date()) if len(active_dates) > 0 else "N/A")
     trigger_dates = df_comp.index[(df_comp["Composite"] > 2) & (df_comp["Composite"] > df_comp["Composite MA2"])]

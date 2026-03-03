@@ -403,6 +403,86 @@ def compute_vol_regime(log_fn=print):
         return False
 
 
+# ── AD_Line signal computation ──────────────────────────────────────────────────
+def compute_adl(log_fn=print):
+    """
+    Computes the Cumulative A/D Line indicator (AD_Line) using the exact Colab
+    cell 9 logic:
+      - advancing from NYSE_Advancing_Stocks_$NSHU.csv, column "Last"
+      - declining from NYSE_Declining_Stocks_$NSHD.csv, column "Last"
+      - START_DATE = "2005-03-01"
+      - Filter to START_DATE first, align on inner join, daily_net = adv - dec
+      - cumulative_ad_line = daily_net.cumsum()
+      - cumulative_ad_line_200sma = rolling(200, min_periods=200).mean()
+      - adl_indicator = (cumulative_ad_line > cumulative_ad_line_200sma).astype(int)
+    NOTE: the original Colab has a bug using 'trend_indicator' for spy_lime
+    coloring instead of 'adl_indicator'; this implementation uses adl_indicator.
+    Updates AD_Line column in data/datasets/market_risk_indicators.csv.
+    """
+    START_DATE = "2005-03-01"
+
+    log_fn("  Computing AD_Line signal...")
+    try:
+        def _load(filename):
+            path = os.path.join(BARCHART, filename)
+            if not os.path.exists(path):
+                return None
+            df = pd.read_csv(path, parse_dates=True, index_col=0)
+            df.index = pd.to_datetime(df.index, errors="coerce")
+            df = df[df.index.notna()].sort_index()
+            df["Last"] = pd.to_numeric(
+                df["Last"].astype(str).str.replace(",", ""), errors="coerce"
+            )
+            return df
+
+        adv_df = _load("NYSE_Advancing_Stocks_$NSHU.csv")
+        dec_df = _load("NYSE_Declining_Stocks_$NSHD.csv")
+
+        if adv_df is None or dec_df is None:
+            log_fn("  ⚠️  AD_Line: NSHU or NSHD CSV missing, skipping.")
+            return False
+
+        # Filter to START_DATE first, then align on inner join dates
+        adv = adv_df["Last"].dropna()
+        dec = dec_df["Last"].dropna()
+        adv = adv[adv.index >= START_DATE]
+        dec = dec[dec.index >= START_DATE]
+        common = adv.index.intersection(dec.index)
+        daily_net = adv.reindex(common) - dec.reindex(common)
+
+        cumulative_ad_line     = daily_net.cumsum()
+        cumulative_ad_line_200sma = cumulative_ad_line.rolling(
+            window=200, min_periods=200
+        ).mean()
+        adl_indicator = (cumulative_ad_line > cumulative_ad_line_200sma).astype(int)
+        adl_indicator.name = "AD_Line"
+
+        # Update market_risk_indicators.csv
+        ind_path = os.path.join(DATASETS, "market_risk_indicators.csv")
+        if not os.path.exists(ind_path):
+            log_fn("  ⚠️  AD_Line: market_risk_indicators.csv not found, skipping.")
+            return False
+
+        ind_df = pd.read_csv(ind_path, parse_dates=True, index_col=0)
+        ind_df.index = pd.to_datetime(ind_df.index, errors="coerce")
+        ind_df = ind_df[ind_df.index.notna()].sort_index()
+
+        ind_df["AD_Line"] = adl_indicator.reindex(ind_df.index)
+        ind_df.to_csv(ind_path)
+
+        # Verification — report 2018-07-01 to 2019-03-01
+        ref = adl_indicator.loc["2018-07-01":"2019-03-01"]
+        log_fn(f"  AD_Line 2018-07-01 to 2019-03-01:")
+        log_fn(ref.to_string())
+        log_fn(f"  Last 10 AD_Line values:\n{adl_indicator.tail(10).to_string()}")
+        log_fn(f"  ✅  AD_Line updated ({len(adl_indicator)} rows)")
+        return True
+
+    except Exception as e:
+        log_fn(f"  ❌  AD_Line — ERROR: {e}")
+        return False
+
+
 # ── BTD signal computation ───────────────────────────────────────────────────────
 def compute_btd_signals(log_fn=print):
     """
@@ -629,6 +709,17 @@ def run_update(log_fn=print):
             failed += 1
     except Exception as e:
         log_fn(f"  ❌  Vol_Regime — ERROR: {e}")
+        failed += 1
+
+    # AD_Line signal
+    try:
+        ok = compute_adl(log_fn)
+        if ok:
+            success += 1
+        else:
+            failed += 1
+    except Exception as e:
+        log_fn(f"  ❌  AD_Line — ERROR: {e}")
         failed += 1
 
     log_fn("=" * 60)

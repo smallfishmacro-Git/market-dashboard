@@ -252,13 +252,18 @@ def _compute_acwi_200sma(log=print):
     return pd.DataFrame({"Pct": osc200, "Trend": (osc200 > 50).astype(int)})
 
 def _compute_adl():
-    adv = _load_bc("NYSE_Advancing_Stocks_$NSHU.csv")["Last"]
-    dec = _load_bc("NYSE_Declining_Stocks_$NSHD.csv")["Last"]
-    daily_net = (adv - dec).dropna()
-    daily_net = daily_net[daily_net.index >= "2005-03-01"]  # match Colab START_DATE
-    cum = daily_net.cumsum()
-    sma = cum.rolling(200, min_periods=200).mean()
-    return pd.DataFrame({"CumAD": cum, "Trend": (cum > sma).astype(int)})
+    START_DATE = "2005-03-01"
+    adv = _load_bc("NYSE_Advancing_Stocks_$NSHU.csv")["Last"].dropna()
+    dec = _load_bc("NYSE_Declining_Stocks_$NSHD.csv")["Last"].dropna()
+    # Filter to START_DATE first, then align on inner join dates (Colab cell 9)
+    adv = adv[adv.index >= START_DATE]
+    dec = dec[dec.index >= START_DATE]
+    common = adv.index.intersection(dec.index)
+    daily_net = adv.reindex(common) - dec.reindex(common)
+    cumulative_ad_line = daily_net.cumsum()
+    cumulative_ad_line_200sma = cumulative_ad_line.rolling(window=200, min_periods=200).mean()
+    adl_indicator = (cumulative_ad_line > cumulative_ad_line_200sma).astype(int)
+    return pd.DataFrame({"CumAD": cumulative_ad_line, "Trend": adl_indicator})
 
 def _compute_inout(log=print):
     import yfinance as yf

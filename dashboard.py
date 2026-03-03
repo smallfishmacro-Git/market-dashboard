@@ -14,7 +14,7 @@ st.set_page_config(
 
 # ── Dark theme styling ─────────────────────────────────────────────────────────
 st.markdown("""<style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* ── Apply font only to text-bearing elements, NOT icon elements ── */
 body, .stApp,
@@ -33,7 +33,7 @@ div[data-testid="stButton"] > button {
 }
 
 /* ── Background ── */
-.stApp { background-color: #0e0e0e; color: #cccccc; }
+.stApp { background-color: #0a0a0a; color: #cccccc; }
 
 /* ── Headings orange ── */
 h1, h2, h3 { color: #ff6600 !important; text-transform: uppercase; letter-spacing: 0.12em; }
@@ -45,7 +45,7 @@ h1, h2, h3 { color: #ff6600 !important; text-transform: uppercase; letter-spacin
 .stTabs [aria-selected="true"] { color: #ff6600 !important; border-bottom: 2px solid #ff6600 !important; }
 
 /* ── Metrics ── */
-div[data-testid="stMetricValue"] { font-size: 1.7rem; color: #ffffff; }
+div[data-testid="stMetricValue"] { font-size: 1.8rem; font-weight: 600; color: #ffffff; }
 div[data-testid="stMetricLabel"] { color: #666666; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.14em; }
 div[data-testid="stMetricDelta"] { font-size: 0.75rem; }
 
@@ -74,7 +74,7 @@ hr { border-color: #222222; }
 .stAlert { font-size: 0.78rem; }
 .stCaption { color: #444444 !important; font-size: 0.68rem; text-transform: uppercase; }
 ::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: #0e0e0e; }
+::-webkit-scrollbar-track { background: #0a0a0a; }
 ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
 </style>""", unsafe_allow_html=True)
 
@@ -117,7 +117,6 @@ def delta(df):
 # ── Header ─────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@400;500;600&display=swap');
 .regime-header {
     display: flex;
     align-items: center;
@@ -138,28 +137,27 @@ st.markdown("""
     gap: 4px;
 }
 .regime-title {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 2.4rem;
-    font-weight: 900;
-    letter-spacing: 0.18em;
+    font-family: 'Inter', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
     color: #ff6600;
     text-transform: uppercase;
     line-height: 1;
     margin: 0;
-    text-shadow: 0 0 18px #ff660066;
 }
 .regime-sub {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.78rem;
-    letter-spacing: 0.22em;
-    color: #888888;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    color: #666666;
     text-transform: uppercase;
     margin: 0;
 }
 .regime-version {
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Inter', sans-serif;
     font-size: 0.65rem;
-    letter-spacing: 0.15em;
+    letter-spacing: 0.08em;
     color: #555555;
     margin: 0;
 }
@@ -213,7 +211,7 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
 
 # ── TAB 1: OVERVIEW ────────────────────────────────────────────────────────────
 with tab1:
-    st.subheader("Market Snapshot")
+    st.markdown('<p style="font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;color:#ff6600;text-transform:uppercase;letter-spacing:0.12em;margin:8px 0 12px 0;">Market Snapshot</p>', unsafe_allow_html=True)
     try:
         spx  = load_bc("S&P_500_Index_$SPX.csv")
         vix  = load_bc("CBOE_Volatility_Index_$VIX.csv")
@@ -226,20 +224,20 @@ with tab1:
         col3.metric("% Above 50D MA", f"{last_val(mmfi):.1f}%", f"{delta(mmfi):+.1f}")
         col4.metric("% Above 200D MA",f"{last_val(mmth):.1f}%", f"{delta(mmth):+.1f}")
 
-        st.subheader("S&P 500 — 2 Years")
+        st.markdown('<p style="font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;color:#ff6600;text-transform:uppercase;letter-spacing:0.12em;margin:20px 0 12px 0;">S&P 500 — 2 Years</p>', unsafe_allow_html=True)
         spx2 = spx.last("730D")
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=spx2.index, y=spx2["Last"],
                                  mode="lines", name="SPX",
                                  line=dict(color="#ff6600", width=2)))
-        fig.update_layout(template="plotly_dark", plot_bgcolor="#0e0e0e",
-                          paper_bgcolor="#0e0e0e", height=400,
+        fig.update_layout(template="plotly_dark", plot_bgcolor="#0a0a0a",
+                          paper_bgcolor="#0a0a0a", height=400,
                           margin=dict(l=0, r=0, t=20, b=0),
                           xaxis=dict(showgrid=False), yaxis=dict(showgrid=False))
         st.plotly_chart(fig, width='stretch')
 
         # ── Regime Scores from Market Risk CSVs ──────────────────────────────
-        st.subheader("Regime Scores")
+        st.markdown('<p style="font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;color:#ff6600;text-transform:uppercase;letter-spacing:0.12em;margin:20px 0 12px 0;">Regime Scores</p>', unsafe_allow_html=True)
         try:
             import os, pandas as pd
             _base = "/content/drive/MyDrive/Python" if os.path.exists("/content/drive/MyDrive/Python") else os.path.dirname(os.path.abspath(__file__))
@@ -253,10 +251,16 @@ with tab1:
             _thm_bull   = _thm["Trend"].dropna().iloc[-1] == 1
 
             rc1, rc2, rc3 = st.columns(3)
-            rc1.metric("LT Score",    f"{_lt_score} / 3",
-                       delta="🟢 BULL" if _lt_bull  else "🔴 BEAR")
-            rc2.metric("Health Score", f"{_thm_score:.0f}%",
-                       delta="🟢 BULL" if _thm_bull else "🔴 BEAR")
+            _lt_accent  = "#ff6600" if _lt_bull  else "#ff4444"
+            _lt_sub_c   = "#00c896" if _lt_bull  else "#ff4444"
+            _lt_sub     = "BULL" if _lt_bull  else "BEAR"
+            _thm_accent = "#ff6600" if _thm_bull else "#ff4444"
+            _thm_sub_c  = "#00c896" if _thm_bull else "#ff4444"
+            _thm_sub    = "BULL" if _thm_bull else "BEAR"
+            with rc1:
+                st.markdown(f"<div style='background:#141414;border-radius:12px;border:1px solid #2a2a2a;border-bottom:2px solid {_lt_accent};padding:20px 24px;'><div style='font-size:0.7rem;font-weight:500;color:#888888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;'>LT Score</div><div style='font-size:1.8rem;font-weight:600;color:#ffffff;line-height:1.2;'>{_lt_score} / 3</div><div style='font-size:0.75rem;color:{_lt_sub_c};margin-top:6px;font-weight:500;'>{_lt_sub}</div></div>", unsafe_allow_html=True)
+            with rc2:
+                st.markdown(f"<div style='background:#141414;border-radius:12px;border:1px solid #2a2a2a;border-bottom:2px solid {_thm_accent};padding:20px 24px;'><div style='font-size:0.7rem;font-weight:500;color:#888888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;'>Health Score</div><div style='font-size:1.8rem;font-weight:600;color:#ffffff;line-height:1.2;'>{_thm_score:.0f}%</div><div style='font-size:0.75rem;color:{_thm_sub_c};margin-top:6px;font-weight:500;'>{_thm_sub}</div></div>", unsafe_allow_html=True)
         except Exception as _re:
             st.warning(f"Regime scores unavailable: {_re}")
 
@@ -264,16 +268,20 @@ with tab1:
         try:
             _df_btd = load_btd_signals()
             if _df_btd is not None and "Composite" in _df_btd.columns:
-                _btd_now = int(_df_btd["Composite"].iloc[-1])
-                _btd_lbl = "🔥 Elevated" if _btd_now >= 3 else ("⚠️ Moderate" if _btd_now >= 1 else "Normal")
-                rc3.metric("BTD Score", f"{_btd_now} / 9", delta=_btd_lbl)
+                _btd_now    = int(_df_btd["Composite"].iloc[-1])
+                _btd_accent = "#ff6600" if _btd_now >= 3 else ("#ff6600" if _btd_now >= 1 else "#2a2a2a")
+                _btd_sub_c  = "#00c896" if _btd_now >= 3 else ("#888888" if _btd_now >= 1 else "#555555")
+                _btd_sub    = "ELEVATED" if _btd_now >= 3 else ("MODERATE" if _btd_now >= 1 else "NORMAL")
+                with rc3:
+                    st.markdown(f"<div style='background:#141414;border-radius:12px;border:1px solid #2a2a2a;border-bottom:2px solid {_btd_accent};padding:20px 24px;'><div style='font-size:0.7rem;font-weight:500;color:#888888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;'>BTD Score</div><div style='font-size:1.8rem;font-weight:600;color:#ffffff;line-height:1.2;'>{_btd_now} / 9</div><div style='font-size:0.75rem;color:{_btd_sub_c};margin-top:6px;font-weight:500;'>{_btd_sub}</div></div>", unsafe_allow_html=True)
             else:
-                rc3.metric("BTD Score", "— / 9", delta="No data")
+                with rc3:
+                    st.markdown("<div style='background:#141414;border-radius:12px;border:1px solid #2a2a2a;border-bottom:2px solid #2a2a2a;padding:20px 24px;'><div style='font-size:0.7rem;font-weight:500;color:#888888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;'>BTD Score</div><div style='font-size:1.8rem;font-weight:600;color:#555555;line-height:1.2;'>— / 9</div><div style='font-size:0.75rem;color:#555555;margin-top:6px;'>No data</div></div>", unsafe_allow_html=True)
         except Exception:
             pass
 
         # ── Market Risk Indicators Grid ───────────────────────────────────────
-        st.subheader("Market Risk Indicators")
+        st.markdown('<p style="font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;color:#ff6600;text-transform:uppercase;letter-spacing:0.12em;margin:20px 0 12px 0;">Market Risk Indicators</p>', unsafe_allow_html=True)
         try:
             _ind = pd.read_csv(os.path.join(DATASETS, "market_risk_indicators.csv"), index_col=0, parse_dates=True)
             _ind = _ind[_ind.index.notna()].sort_index()
@@ -300,7 +308,7 @@ with tab1:
             _ind_cols = [c for c in _ind.columns if c != "S&P500"]
             for _i in range(0, len(_ind_cols), 6):
                 if _i > 0:
-                    st.markdown('<div style="height:10px"></div>', unsafe_allow_html=True)
+                    st.markdown('<div style="height:16px"></div>', unsafe_allow_html=True)
                 _row = st.columns(6)
                 for _j, _cn in enumerate(_ind_cols[_i:_i+6]):
                     _s = _ind[_cn].dropna()
@@ -308,16 +316,16 @@ with tab1:
                     _lbl = _ind_labels.get(_cn, _cn)
                     with _row[_j]:
                         if _v == 1:
-                            st.markdown(f"<div style='background:#0e0e0e;border:1px solid #00ff88;border-radius:6px;padding:16px 10px;text-align:center;margin-bottom:10px;'><div style='font-size:1.5rem;color:#00ff88;font-weight:bold;line-height:1.2;'>&#10003;</div><div style='font-size:0.62rem;color:#00ff88;font-weight:600;letter-spacing:0.05em;margin-top:6px;'>BULL</div><div style='font-size:0.60rem;color:#555;margin-top:8px;'>{_lbl}</div></div>", unsafe_allow_html=True)
+                            st.markdown(f"<div style='background:#141414;border:1px solid #00c896;border-radius:10px;padding:16px 8px;text-align:center;margin-bottom:10px;'><div style='font-size:2rem;color:#00c896;font-weight:bold;line-height:1.2;'>&#10003;</div><div style='font-size:0.65rem;color:#00c896;font-weight:600;letter-spacing:0.1em;margin-top:6px;text-transform:uppercase;'>BULL</div><div style='font-size:0.7rem;color:#666666;margin-top:4px;'>{_lbl}</div></div>", unsafe_allow_html=True)
                         elif _v == 0:
-                            st.markdown(f"<div style='background:#0e0e0e;border:1px solid #ff4444;border-radius:6px;padding:16px 10px;text-align:center;margin-bottom:10px;'><div style='font-size:1.5rem;color:#ff4444;font-weight:bold;line-height:1.2;'>&#10007;</div><div style='font-size:0.62rem;color:#ff4444;font-weight:600;letter-spacing:0.05em;margin-top:6px;'>BEAR</div><div style='font-size:0.60rem;color:#555;margin-top:8px;'>{_lbl}</div></div>", unsafe_allow_html=True)
+                            st.markdown(f"<div style='background:#141414;border:1px solid #ff4444;border-radius:10px;padding:16px 8px;text-align:center;margin-bottom:10px;'><div style='font-size:2rem;color:#ff4444;font-weight:bold;line-height:1.2;'>&#10007;</div><div style='font-size:0.65rem;color:#ff4444;font-weight:600;letter-spacing:0.1em;margin-top:6px;text-transform:uppercase;'>BEAR</div><div style='font-size:0.7rem;color:#666666;margin-top:4px;'>{_lbl}</div></div>", unsafe_allow_html=True)
                         else:
-                            st.markdown(f"<div style='background:#0e0e0e;border:1px solid #333;border-radius:6px;padding:16px 10px;text-align:center;margin-bottom:10px;'><div style='font-size:1.5rem;color:#555;line-height:1.2;'>—</div><div style='font-size:0.62rem;color:#555;letter-spacing:0.05em;'>N/A</div><div style='font-size:0.60rem;color:#555;margin-top:8px;'>{_lbl}</div></div>", unsafe_allow_html=True)
+                            st.markdown(f"<div style='background:#141414;border:1px solid #2a2a2a;border-radius:10px;padding:16px 8px;text-align:center;margin-bottom:10px;'><div style='font-size:2rem;color:#444;line-height:1.2;'>—</div><div style='font-size:0.65rem;color:#444;letter-spacing:0.1em;'>N/A</div><div style='font-size:0.7rem;color:#666666;margin-top:4px;'>{_lbl}</div></div>", unsafe_allow_html=True)
         except Exception as _e:
             st.warning(f"Market risk indicators unavailable: {_e}")
 
         # ── Buy The Dip Signals Grid ──────────────────────────────────────────
-        st.subheader("Buy The Dip Signals")
+        st.markdown('<p style="font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;color:#ff6600;text-transform:uppercase;letter-spacing:0.12em;margin:20px 0 12px 0;">Buy The Dip Signals</p>', unsafe_allow_html=True)
         _btd_map = [
             ("R3000_5D",   "% R3000 > 5D MA"),
             ("ACWI_Osc",   "ACWI Oscillator"),
@@ -333,16 +341,16 @@ with tab1:
         if _df_btd2 is not None:
             for _i in range(0, len(_btd_map), 6):
                 if _i > 0:
-                    st.markdown('<div style="height:10px"></div>', unsafe_allow_html=True)
+                    st.markdown('<div style="height:16px"></div>', unsafe_allow_html=True)
                 _row = st.columns(6)
                 for _j, (_sc, _lbl) in enumerate(_btd_map[_i:_i+6]):
                     _s = _df_btd2[_sc].dropna() if _sc in _df_btd2.columns else pd.Series(dtype=float)
                     _v = int(_s.iloc[-1]) if len(_s) else None
                     with _row[_j]:
                         if _v == 1:
-                            st.markdown(f"<div style='background:#0e0e0e;border:1px solid #00ff88;border-radius:6px;padding:16px 10px;text-align:center;margin-bottom:10px;'><div style='font-size:1.5rem;color:#00ff88;font-weight:bold;line-height:1.2;'>&#10003;</div><div style='font-size:0.62rem;color:#00ff88;font-weight:600;letter-spacing:0.05em;margin-top:6px;'>ACTIVE</div><div style='font-size:0.60rem;color:#555;margin-top:8px;'>{_lbl}</div></div>", unsafe_allow_html=True)
+                            st.markdown(f"<div style='background:#141414;border:1px solid #00c896;border-radius:10px;padding:16px 8px;text-align:center;margin-bottom:10px;'><div style='font-size:2rem;color:#00c896;font-weight:bold;line-height:1.2;'>&#10003;</div><div style='font-size:0.65rem;color:#00c896;font-weight:600;letter-spacing:0.1em;margin-top:6px;text-transform:uppercase;'>SIGNAL</div><div style='font-size:0.7rem;color:#666666;margin-top:4px;'>{_lbl}</div></div>", unsafe_allow_html=True)
                         else:
-                            st.markdown(f"<div style='background:#0e0e0e;border:1px solid #ff4444;border-radius:6px;padding:16px 10px;text-align:center;margin-bottom:10px;'><div style='font-size:1.5rem;color:#ff4444;font-weight:bold;line-height:1.2;'>&#10007;</div><div style='font-size:0.62rem;color:#ff4444;letter-spacing:0.05em;'>OFF</div><div style='font-size:0.60rem;color:#555;margin-top:8px;'>{_lbl}</div></div>", unsafe_allow_html=True)
+                            st.markdown(f"<div style='background:#141414;border:1px solid #2a2a2a;border-radius:10px;padding:16px 8px;text-align:center;margin-bottom:10px;'><div style='font-size:2rem;color:#444;line-height:1.2;'>—</div><div style='font-size:0.65rem;color:#555;letter-spacing:0.1em;text-transform:uppercase;'>IDLE</div><div style='font-size:0.7rem;color:#666666;margin-top:4px;'>{_lbl}</div></div>", unsafe_allow_html=True)
         else:
             st.caption("Run data_updater.py to generate BTD signals.")
 

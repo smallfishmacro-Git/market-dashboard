@@ -165,20 +165,30 @@ def _compute_vol_regime():
     move = _load_bc("Move_Index_$MOVE.csv")["Last"].rename("MOVE")
     df   = pd.concat([vix, move], axis=1).ffill().dropna()
     w    = 126
-    def trend_band(s, lo, hi):
-        out, sig = [], False
-        for v, l, h in zip(s, lo, hi):
-            if not sig and v > h:  sig = True
-            elif sig and v < l:    sig = False
-            out.append(1 if sig else 0)
-        return out
+    def calculate_trend(series, low_band, high_band):
+        values, signal = [], False
+        for value, low, high in zip(series, low_band, high_band):
+            if not signal and value > high:
+                values.append(1)
+                signal = True
+            elif not signal and value <= high:
+                values.append(0)
+            elif signal and value < low:
+                values.append(0)
+                signal = False
+            elif signal and value >= low:
+                values.append(1)
+            else:
+                values.append(0)
+        return values
     for c in ["VIX", "MOVE"]:
         df[f"{c}_lo"] = df[c].rolling(w).quantile(0.1)
         df[f"{c}_hi"] = df[c].rolling(w).quantile(0.9)
     df = df.dropna()
-    df["tv"]    = trend_band(df["VIX"],  df["VIX_lo"],  df["VIX_hi"])
-    df["tm"]    = trend_band(df["MOVE"], df["MOVE_lo"], df["MOVE_hi"])
-    df["Trend"] = np.where((df["tv"] == 0) & (df["tm"] == 0), 1, 0)
+    df["tv"]    = calculate_trend(df["VIX"],  df["VIX_lo"],  df["VIX_hi"])
+    df["tm"]    = calculate_trend(df["MOVE"], df["MOVE_lo"], df["MOVE_hi"])
+    # Vol_Regime = 1 - regime1; regime1 = both VIX and MOVE elevated
+    df["Trend"] = np.where((df["tv"] == 1) & (df["tm"] == 1), 0, 1)
     return df
 
 def _compute_52w_hilo():

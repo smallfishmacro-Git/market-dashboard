@@ -302,6 +302,107 @@ def compute_vix_hmm(log_fn=print):
         return False
 
 
+# ── Vol_Regime signal computation ───────────────────────────────────────────────
+def compute_vol_regime(log_fn=print):
+    """
+    Computes the Volatility Regime signal using the exact Colab logic:
+      - VIX from yfinance (^VIX), MOVE from Barchart CSV
+      - Rolling 126-day quantile bands with hysteresis (calculate_trend)
+      - regime1 = trend_vix==1 AND trend_move==1 (both elevated)
+      - Vol_Regime = 1 - regime1  (bearish only when BOTH are high)
+    Updates Vol_Regime column in data/datasets/market_risk_indicators.csv.
+    """
+    import numpy as np
+    import yfinance as yf
+
+    log_fn("  Computing Vol_Regime signal...")
+    try:
+        # Load VIX from yfinance
+        vix_df = yf.download("^VIX", start="2008-01-01", progress=False, timeout=30)
+        if vix_df.empty:
+            log_fn("  ⚠️  Vol_Regime: yfinance returned empty for ^VIX, skipping.")
+            return False
+        vix = vix_df["Close"].squeeze().rename("VIX")
+
+        # Load MOVE from Barchart CSV
+        move_path = os.path.join(BARCHART, "Move_Index_$MOVE.csv")
+        if not os.path.exists(move_path):
+            log_fn("  ⚠️  Vol_Regime: Move_Index_$MOVE.csv not found, skipping.")
+            return False
+        move_df = pd.read_csv(move_path, parse_dates=True, index_col=0)
+        move_df.index = pd.to_datetime(move_df.index, errors="coerce")
+        move_df = move_df[move_df.index.notna()].sort_index()
+        move_df["Last"] = pd.to_numeric(
+            move_df["Last"].astype(str).str.replace(",", ""), errors="coerce"
+        )
+        move = move_df["Last"].rename("MOVE")
+
+        # Align and merge on common trading days
+        df = pd.concat([vix, move], axis=1).ffill().dropna()
+
+        # Rolling 126-day quantile bands
+        w = 126
+        df["MOVE_10"] = df["MOVE"].rolling(w).quantile(0.1)
+        df["MOVE_90"] = df["MOVE"].rolling(w).quantile(0.9)
+        df["VIX_10"]  = df["VIX"].rolling(w).quantile(0.1)
+        df["VIX_90"]  = df["VIX"].rolling(w).quantile(0.9)
+        df = df.dropna()
+
+        # Hysteresis trend function (exact Colab calculate_trend)
+        def calculate_trend(series, low_band, high_band):
+            values, signal = [], False
+            for value, low, high in zip(series, low_band, high_band):
+                if not signal and value > high:
+                    values.append(1)
+                    signal = True
+                elif not signal and value <= high:
+                    values.append(0)
+                elif signal and value < low:
+                    values.append(0)
+                    signal = False
+                elif signal and value >= low:
+                    values.append(1)
+                else:
+                    values.append(0)
+            return values
+
+        trend_vix  = calculate_trend(df["VIX"],  df["VIX_10"],  df["VIX_90"])
+        trend_move = calculate_trend(df["MOVE"], df["MOVE_10"], df["MOVE_90"])
+
+        df["trend_vix"]  = trend_vix
+        df["trend_move"] = trend_move
+
+        # Vol_Regime = 1 - regime1; regime1 = both VIX and MOVE elevated
+        regime1    = np.where((df["trend_vix"] == 1) & (df["trend_move"] == 1), 1, 0)
+        vol_regime = pd.Series(1 - regime1, index=df.index, name="Vol_Regime")
+
+        # Update market_risk_indicators.csv
+        ind_path = os.path.join(DATASETS, "market_risk_indicators.csv")
+        if not os.path.exists(ind_path):
+            log_fn("  ⚠️  Vol_Regime: market_risk_indicators.csv not found, skipping.")
+            return False
+
+        ind_df = pd.read_csv(ind_path, parse_dates=True, index_col=0)
+        ind_df.index = pd.to_datetime(ind_df.index, errors="coerce")
+        ind_df = ind_df[ind_df.index.notna()].sort_index()
+
+        ind_df["Vol_Regime"] = vol_regime.reindex(ind_df.index)
+        ind_df.to_csv(ind_path)
+
+        # Verification
+        last10   = vol_regime.dropna().tail(10)
+        log_fn(f"  Last 10 Vol_Regime values:\n{last10.to_string()}")
+        cutoff   = pd.Timestamp.now() - pd.DateOffset(years=5)
+        recent   = vol_regime[vol_regime.index >= cutoff].dropna()
+        pct_bull = recent.mean() * 100 if len(recent) else 0.0
+        log_fn(f"  ✅  Vol_Regime updated. Last 5yr bull%: {pct_bull:.1f}%")
+        return True
+
+    except Exception as e:
+        log_fn(f"  ❌  Vol_Regime — ERROR: {e}")
+        return False
+
+
 # ── BTD signal computation ───────────────────────────────────────────────────────
 def compute_btd_signals(log_fn=print):
     """
@@ -517,6 +618,17 @@ def run_update(log_fn=print):
             failed += 1
     except Exception as e:
         log_fn(f"  ❌  VIX_HMM — ERROR: {e}")
+        failed += 1
+
+    # Vol_Regime signal
+    try:
+        ok = compute_vol_regime(log_fn)
+        if ok:
+            success += 1
+        else:
+            failed += 1
+    except Exception as e:
+        log_fn(f"  ❌  Vol_Regime — ERROR: {e}")
         failed += 1
 
     log_fn("=" * 60)

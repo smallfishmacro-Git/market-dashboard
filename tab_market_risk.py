@@ -591,50 +591,87 @@ def _regime_chart(title, spx, signal, indicator=None, ind_name="",
     return fig
 
 def _chart_lt(df):
-    spx_full   = df["S&P500"].dropna()
-    # Normalize composite to account for fewer indicators before ~1999
-    _lt_keys = [c for c in df.columns if c not in ("S&P500", "Composite", "Trend")]
-    _avail = df[_lt_keys].notna().sum(axis=1).replace(0, np.nan)
-    _n_total = max(len(_lt_keys), 1)
+    START = "1999-01-01"
+    spx_full  = df["S&P500"].dropna()
+    _lt_keys  = [c for c in df.columns if c not in ("S&P500", "Composite", "Trend")]
+    _avail    = df[_lt_keys].notna().sum(axis=1).replace(0, np.nan)
+    _n_total  = max(len(_lt_keys), 1)
     comp_full = (df["Composite"] / _avail * _n_total).fillna(df["Composite"])
-    # Resample to business days to eliminate weekend gaps
-    spx_full = spx_full.resample("B").last().ffill()
-    sig_r_full = df["Trend"].reindex(spx_full.index).ffill().bfill().fillna(0).astype(int).bfill().fillna(0).astype(int)
+    spx_full  = spx_full.resample("B").last().ffill()
+    sig_r_full = (df["Trend"].reindex(spx_full.index)
+                  .ffill().bfill().fillna(0).astype(int))
 
-    comp_start = comp_full.first_valid_index() or spx_full.index[0]
-    spx   = spx_full[spx_full.index >= comp_start]
-    comp  = comp_full[comp_full.index >= comp_start]
-    sig_r = sig_r_full[sig_r_full.index >= comp_start]
+    spx   = spx_full[spx_full.index >= START]
+    comp  = comp_full[comp_full.index >= START]
+    sig_r = sig_r_full[sig_r_full.index >= START]
 
-    fig = make_subplots(rows=2, cols=1, shared_xaxes=True,
-                        vertical_spacing=0.05, row_heights=[0.60, 0.40],
-                        subplot_titles=("S&P 500 Price with Trend Overlay (Log Scale)",
-                                        "Long Term Trend Composite"))
-    fig.add_trace(go.Scatter(x=spx.index, y=spx, name="S&P 500",
-                             mode="lines", line=dict(color=WHITE, width=1.2),
-                             connectgaps=False), row=1, col=1)
-    fig.add_trace(go.Scatter(x=spx.index, y=spx.where(sig_r >= 1), name="Bull",
-                             mode="lines", line=dict(color=LIME, width=2.0),
-                             connectgaps=False), row=1, col=1)
-    fig.add_trace(go.Scatter(x=spx.index, y=spx.where(sig_r == 0), name="Bear",
-                             mode="lines", line=dict(color=RED, width=2.0),
-                             connectgaps=False), row=1, col=1)
-    fig.add_trace(go.Scatter(x=comp.index, y=comp,
-                             name="Long Term Composite", mode="lines",
-                             line=dict(color=ORANGE, width=2, shape="hv"),
-                             connectgaps=True), row=2, col=1)
+    _C = "#141414"   # chart bg
+    _P = "#0f0f0f"   # paper bg
+    _G = "#1e1e1e"   # gridlines
+    _T = "#888888"   # text / ticks
+    _B = "#222222"   # axis lines
+
+    fig = make_subplots(
+        rows=2, cols=1, shared_xaxes=True,
+        vertical_spacing=0.06, row_heights=[0.60, 0.40],
+        subplot_titles=("S&P 500 \u2014 Bull/Bear Overlay (Log Scale)",
+                        "Long Term Composite Score"),
+    )
+
+    # ── Row 1: S&P 500 with bull/bear colouring ──────────────────────────────
+    fig.add_trace(go.Scatter(
+        x=spx.index, y=spx, name="S&P 500",
+        mode="lines", line=dict(color="#444444", width=1.2),
+        connectgaps=False), row=1, col=1)
+    fig.add_trace(go.Scatter(
+        x=spx.index, y=spx.where(sig_r >= 1), name="Bull",
+        mode="lines", line=dict(color="#00c896", width=2.0),
+        connectgaps=False), row=1, col=1)
+    fig.add_trace(go.Scatter(
+        x=spx.index, y=spx.where(sig_r == 0), name="Bear",
+        mode="lines", line=dict(color="#ff4444", width=2.0),
+        connectgaps=False), row=1, col=1)
+
+    # ── Row 2: composite bar chart ────────────────────────────────────────────
+    fig.add_trace(go.Bar(
+        x=comp.index, y=comp, name="Composite",
+        marker=dict(color="#ff6600", opacity=0.85)),
+        row=2, col=1)
     fig.add_hline(y=2, line_dash="dot",
-                  line_color="rgba(255,255,255,0.3)", line_width=1.5, row=2, col=1)
-    layout = _layout(600)
-    layout["title"] = dict(text="S&P 500 vs Long Term Trend Composite with Overlay",
-                           font=dict(color=WHITE, size=13))
-    fig.update_layout(**layout)
-    fig.update_xaxes(**_xax(), row=1, col=1)
-    fig.update_xaxes(**_xax(), row=2, col=1)
-    fig.update_yaxes(**_yax(WHITE, log=True, grid=True),
-                     title_text="S&P 500 (Log Scale)", row=1, col=1)
-    fig.update_yaxes(**_yax(ORANGE), title_text="Long Term Composite",
-                     row=2, col=1, range=[-0.2, 3.5])
+                  line_color="#333333", line_width=1.5, row=2, col=1)
+
+    # ── Layout ────────────────────────────────────────────────────────────────
+    fig.update_layout(
+        plot_bgcolor=_C, paper_bgcolor=_P, height=600,
+        margin=dict(l=60, r=40, t=40, b=40),
+        font=dict(color=_T, family="Inter, Arial, sans-serif", size=11),
+        legend=dict(orientation="h", x=0.5, xanchor="center", y=1.02,
+                    bgcolor="rgba(0,0,0,0)",
+                    font=dict(color=_T, size=11)),
+        bargap=0,
+    )
+    fig.update_annotations(
+        font=dict(color=_T, size=12, family="Inter, Arial, sans-serif"))
+
+    # ── Axes ──────────────────────────────────────────────────────────────────
+    _xax_style = dict(showgrid=False, zeroline=False,
+                      tickfont=dict(color=_T, size=11),
+                      linecolor=_B, rangebreaks=RB)
+    fig.update_xaxes(**_xax_style, row=1, col=1)
+    fig.update_xaxes(**_xax_style, row=2, col=1)
+
+    fig.update_yaxes(
+        tickfont=dict(color=_T, size=11),
+        title_text="S&P 500 (Log)", title_font=dict(color=_T, size=11),
+        type="log", showgrid=True, gridcolor=_G,
+        zeroline=False, linecolor=_B,
+        row=1, col=1)
+    fig.update_yaxes(
+        tickfont=dict(color=_T, size=11),
+        title_text="Composite", title_font=dict(color=_T, size=11),
+        showgrid=True, gridcolor=_G, dtick=1,
+        zeroline=False, linecolor=_B, range=[0, 3],
+        row=2, col=1)
     return fig
 
 

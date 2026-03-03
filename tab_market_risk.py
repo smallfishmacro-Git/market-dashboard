@@ -93,8 +93,8 @@ def _load_spx():
         elif c in ("low", "lo"):          rn[c] = "low"
     return df.rename(columns=rn)
 
-@st.cache_data(ttl=3600)
-def _read_cache(path):
+@st.cache_data
+def _read_cache(path, file_mtime=None):   # file_mtime busts cache when CSV changes
     if not os.path.exists(path):
         return None
     df = pd.read_csv(path, parse_dates=True, index_col=0)
@@ -720,10 +720,10 @@ def render():
             st.rerun()
         return
 
-    # ── Load cached data (instant) ────────────────────────────────────────────
-    df_lt  = _read_cache(CSV_LT)
-    df_thm = _read_cache(CSV_THM)
-    ind_df = _read_cache(CSV_IND)
+    # ── Load cached data — cache busts automatically when any CSV changes ─────
+    df_lt  = _read_cache(CSV_LT,  file_mtime=os.path.getmtime(CSV_LT)  if os.path.exists(CSV_LT)  else None)
+    df_thm = _read_cache(CSV_THM, file_mtime=os.path.getmtime(CSV_THM) if os.path.exists(CSV_THM) else None)
+    ind_df = _read_cache(CSV_IND, file_mtime=os.path.getmtime(CSV_IND) if os.path.exists(CSV_IND) else None)
 
     # Use ind_df for SPX — it has the longest history
     if ind_df is not None and "S&P500" in ind_df.columns:

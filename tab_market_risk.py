@@ -702,11 +702,6 @@ def _ind_chart(title, ind_df, col, spx_s,
 #  RENDER
 # ══════════════════════════════════════════════════════════════════════════════
 def render():
-    st.subheader("Market Risk — Regime Indicators")
-    st.caption("Lime = Bull regime  |  Red = Bear regime  "
-               "|  Long Term: Bull if ≥ 2/3 signals  "
-               "|  Health Model: Bull if > 55%")
-
     csvs_ready = all(os.path.exists(p) for p in [CSV_LT, CSV_THM, CSV_IND])
 
     # ── First-run: show compute button ────────────────────────────────────────
@@ -745,10 +740,119 @@ def render():
         st.cache_data.clear()
         st.rerun()
 
+
+    # ══════════════════════════════════════════════════════════════════════════
+    #  INDICATOR TABLES
+    # ══════════════════════════════════════════════════════════════════════════
+
+    def _last_change_date(df, col):
+        if col not in df.columns:
+            return "—"
+        s = df[col].dropna()
+        if len(s) < 2:
+            return "—"
+        changed = s[s.diff().abs() > 0]
+        return changed.index[-1].strftime("%b %d, %Y") if len(changed) else "—"
+
+    def _last_update_date(df, col):
+        if col not in df.columns:
+            return "—"
+        s = df[col].dropna()
+        return s.index[-1].strftime("%b %d, %Y") if len(s) else "—"
+
+    def _get_signal(df, col):
+        if col not in df.columns:
+            return None
+        s = df[col].dropna()
+        return int(s.iloc[-1]) if len(s) else None
+
+    def _pill(val):
+        if val == 1:
+            return ("<span style='border:1px solid #00c896;color:#00c896;"
+                    "border-radius:4px;padding:2px 10px;font-size:0.7rem;"
+                    "font-weight:500;'>Long</span>")
+        elif val == 0:
+            return ("<span style='border:1px solid #ff4444;color:#ff4444;"
+                    "border-radius:4px;padding:2px 10px;font-size:0.7rem;"
+                    "font-weight:500;'>Short</span>")
+        return ("<span style='border:1px solid #444;color:#555;"
+                "border-radius:4px;padding:2px 10px;font-size:0.7rem;"
+                "font-weight:500;'>—</span>")
+
+    def _build_table(section_title, rows):
+        th_s = ("text-align:left;padding:8px 12px 8px 0;"
+                "font-family:Inter,sans-serif;font-size:0.7rem;"
+                "font-weight:500;color:#888888;text-transform:uppercase;"
+                "letter-spacing:0.08em;white-space:nowrap;")
+        th_r = ("text-align:right;padding:8px 0 8px 12px;"
+                "font-family:Inter,sans-serif;font-size:0.7rem;"
+                "font-weight:500;color:#888888;text-transform:uppercase;"
+                "letter-spacing:0.08em;white-space:nowrap;")
+        thead = (f"<thead><tr style='border-bottom:1px solid #1e1e1e;'>"
+                 f"<th style='{th_s}width:38%;'>Name</th>"
+                 f"<th style='{th_s}width:20%;'>Last Change</th>"
+                 f"<th style='{th_s}width:20%;'>Last Update</th>"
+                 f"<th style='{th_r}width:22%;'>Status</th>"
+                 f"</tr></thead>")
+        tbody = ""
+        for name, col, df_src in rows:
+            lc  = _last_change_date(df_src, col)
+            lu  = _last_update_date(df_src, col)
+            val = _get_signal(df_src, col)
+            tbody += (
+                f"<tr style='border-bottom:1px solid #141414;'>"
+                f"<td style='padding:12px 12px 12px 0;font-family:Inter,sans-serif;"
+                f"font-size:0.85rem;color:#ffffff;'>{name}</td>"
+                f"<td style='padding:12px;font-family:Inter,sans-serif;"
+                f"font-size:0.8rem;color:#888888;'>{lc}</td>"
+                f"<td style='padding:12px;font-family:Inter,sans-serif;"
+                f"font-size:0.8rem;color:#888888;'>{lu}</td>"
+                f"<td style='padding:12px 0 12px 12px;text-align:right;'>"
+                f"{_pill(val)}</td></tr>"
+            )
+        title_html = (
+            f"<p style='font-family:Inter,sans-serif;font-size:0.75rem;"
+            f"font-weight:600;color:#ff6600;text-transform:uppercase;"
+            f"letter-spacing:0.12em;margin:0 0 12px 0;'>{section_title}</p>"
+        )
+        table_html = (
+            f"<table style='width:100%;border-collapse:collapse;"
+            f"background:#0a0a0a;'>{thead}<tbody>{tbody}</tbody></table>"
+        )
+        return f"<div style='margin-bottom:32px;'>{title_html}{table_html}</div>"
+
+    _lt_rows = [
+        ("OECD CLI Diffusion Index",    "OECD_CLI",
+         ind_df if "OECD_CLI" in ind_df.columns else df_lt),
+        ("Nasdaq 100 Cumulative Hi-Lo", "N100_HiLo",
+         ind_df if "N100_HiLo" in ind_df.columns else df_lt),
+        ("Credit Spreads (FRED)",       "Credit_Spreads",
+         ind_df if "Credit_Spreads" in ind_df.columns else df_lt),
+    ]
+    _thm_rows = [
+        ("Volatility Regime (MOVE/VIX)",   "Vol_Regime",  ind_df),
+        ("NYSE 52-Week Hi-Lo Trend",        "HiLo_52W",   ind_df),
+        ("Canary Model",                    "Canary",     ind_df),
+        ("% Stocks Above 200-Day SMA",      "Pct_200SMA", ind_df),
+        ("ACWI 200 SMA Breadth",            "ACWI_200",   ind_df),
+        ("Cumulative A/D Line",             "AD_Line",    ind_df),
+        ("In/Out Indicator",                "InOut",      ind_df),
+        ("VIX Term Structure",              "VIX_TS",     ind_df),
+        ("HMM Regime Indicator",            "HMM",        ind_df),
+        ("Quad 1 & 2",                      "Quad",       ind_df),
+        ("Bitcoin Liquidity Proxy",         "BTC",        ind_df),
+        ("SuperTrend Long Term",            "ST_LT",      ind_df),
+        ("SuperTrend Medium Term",          "ST_MT",      ind_df),
+        ("SuperTrend Short Term",           "ST_ST",      ind_df),
+        ("VIX Term Structure x HMM",        "VIX_HMM",   ind_df),
+    ]
+    st.markdown(_build_table("Long Term Indicators", _lt_rows),  unsafe_allow_html=True)
+    st.markdown(_build_table("Health Model Indicators", _thm_rows), unsafe_allow_html=True)
+
     # ══════════════════════════════════════════════════════════════════════════
     #  SECTION 1 — Long Term Trend Composite
     # ══════════════════════════════════════════════════════════════════════════
-    st.markdown("### Long Term Trend Composite")
+    st.markdown('<p style="font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;color:#ff6600;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 12px 0;">Long Term Composite</p>', unsafe_allow_html=True)
     st.plotly_chart(_chart_lt(df_lt), width='stretch')
 
     lt_ind_cols = [c for c in df_lt.columns
@@ -765,7 +869,7 @@ def render():
               and df_lt["Credit_Spreads"].iloc[-1] == 1
               else "BEAR" if "Credit_Spreads" in df_lt.columns else "N/A")
 
-    st.markdown("#### Individual Long Term Indicators")
+    st.markdown('<p style="font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;color:#ff6600;text-transform:uppercase;letter-spacing:0.12em;margin:16px 0 12px 0;">Individual Long Term Indicators</p>', unsafe_allow_html=True)
     for title, col, ind_name, ind_col, label, start in [
         ("1. OECD CLI Diffusion Index",    "OECD_CLI",       "", "#f9ca24", "OECD CLI Strategy",     "1997-01-01"),
         ("2. Nasdaq 100 Cumulative Hi-Lo", "N100_HiLo",      "", "#4ecdc4", "N100 Hi-Lo Strategy",   "1999-01-01"),
@@ -784,7 +888,7 @@ def render():
     # ══════════════════════════════════════════════════════════════════════════
     #  SECTION 2 — Trend Health Model
     # ══════════════════════════════════════════════════════════════════════════
-    st.markdown("### Trend Health Model")
+    st.markdown('<p style="font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;color:#ff6600;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 12px 0;">Trend Health Model</p>', unsafe_allow_html=True)
     st.plotly_chart(_chart_thm(df_thm), width='stretch')
 
     ind_thm      = [col for col in df_thm.columns
@@ -804,7 +908,7 @@ def render():
     c3.metric("Last Regime Change",
               str(regime_chg[-1].date()) if len(regime_chg) > 0 else "N/A")
 
-    st.markdown("#### Individual Health Model Indicators")
+    st.markdown('<p style="font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;color:#ff6600;text-transform:uppercase;letter-spacing:0.12em;margin:16px 0 12px 0;">Individual Health Model Indicators</p>', unsafe_allow_html=True)
     for title, col, ind_col, label, start in [
         ("4.  Volatility Regime (MOVE/VIX)",       "Vol_Regime", ORANGE,    "Vol Regime",         "2008-01-01"),
         ("5.  NYSE 52-Week Hi-Lo Trend",            "HiLo_52W",  "#f9ca24", "Hi-Lo Strategy",     "1990-01-01"),

@@ -524,6 +524,7 @@ def compute_and_save_all(log=print):
     thm_df.index = pd.to_datetime(thm_df.index, errors="coerce")
     thm_df = thm_df[thm_df.index.notna()].sort_index()
     thm_df = thm_df.resample("D").last().ffill().dropna(subset=["S&P500"])
+    thm_df = thm_df[thm_df.index <= spx_s.dropna().index[-1]]  # no dates past last market close
     ind_c  = [c for c in thm_df.columns if c != "S&P500"]
     thm_df["Trend_Composite"] = (thm_df[ind_c].gt(0).sum(axis=1) /
                                   thm_df[ind_c].notna().sum(axis=1)) * 100
@@ -676,17 +677,20 @@ def _chart_lt(df):
 
 
 def _chart_thm(df):
+    START = "1999-01-01"
     spx_full   = df["S&P500"].dropna()
     comp_full  = df["Trend_Composite"]
-    # Resample to business days to eliminate weekend gaps
-    spx_full = spx_full.resample("B").last().ffill()
+    # Resample both to business days to eliminate weekend gaps
+    spx_full  = spx_full.resample("B").last().ffill()
+    comp_full = comp_full.resample("B").last().ffill()
     sig_r_full = (df["Trend"].reindex(spx_full.index)
                   .ffill().bfill().fillna(0).astype(int))
 
     comp_start = comp_full.first_valid_index() or spx_full.index[0]
-    spx   = spx_full[spx_full.index >= comp_start]
-    comp  = comp_full[comp_full.index >= comp_start]
-    sig_r = sig_r_full[sig_r_full.index >= comp_start]
+    start = max(pd.Timestamp(START), comp_start)
+    spx   = spx_full[spx_full.index >= start]
+    comp  = comp_full[comp_full.index >= start]
+    sig_r = sig_r_full[sig_r_full.index >= start]
 
     _C = "#141414"   # chart bg
     _P = "#0f0f0f"   # paper bg

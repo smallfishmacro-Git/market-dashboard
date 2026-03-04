@@ -227,7 +227,7 @@ with tab1:
         try:
             _df_btd = load_btd_signals()
             if _df_btd is not None and "Composite" in _df_btd.columns:
-                _btd_now    = int(_df_btd["Composite"].iloc[-1])
+                _btd_now    = int(_df_btd.dropna(how='all')["Composite"].iloc[-1])
                 _btd_accent = "#ff6600" if _btd_now >= 3 else ("#ff6600" if _btd_now >= 1 else "#2a2a2a")
                 _btd_sub_c  = "#00c896" if _btd_now >= 3 else ("#888888" if _btd_now >= 1 else "#555555")
                 _btd_sub    = "ELEVATED" if _btd_now >= 3 else ("MODERATE" if _btd_now >= 1 else "NORMAL")
@@ -298,13 +298,16 @@ with tab1:
         ]
         _df_btd2 = load_btd_signals()
         if _df_btd2 is not None:
+            _btd_valid = _df_btd2.dropna(how='all')
+            _btd_last  = _btd_valid.iloc[-1] if len(_btd_valid) > 0 else None
             for _i in range(0, len(_btd_map), 6):
                 if _i > 0:
                     st.markdown('<div style="height:16px"></div>', unsafe_allow_html=True)
                 _row = st.columns(6)
                 for _j, (_sc, _lbl) in enumerate(_btd_map[_i:_i+6]):
-                    _s = _df_btd2[_sc].dropna() if _sc in _df_btd2.columns else pd.Series(dtype=float)
-                    _v = int(_s.iloc[-1]) if len(_s) else None
+                    _v = (int(_btd_last[_sc]) if _btd_last is not None
+                          and _sc in _btd_last.index
+                          and pd.notna(_btd_last[_sc]) else None)
                     with _row[_j]:
                         if _v == 1:
                             st.markdown(f"<div style='background:#141414;border:1px solid #00c896;border-radius:10px;padding:16px 8px;text-align:center;margin-bottom:10px;'><div style='font-size:2rem;color:#00c896;font-weight:bold;line-height:1.2;'>&#10003;</div><div style='font-size:0.65rem;color:#00c896;font-weight:600;letter-spacing:0.1em;margin-top:6px;text-transform:uppercase;'>SIGNAL</div><div style='font-size:0.7rem;color:#666666;margin-top:4px;'>{_lbl}</div></div>", unsafe_allow_html=True)

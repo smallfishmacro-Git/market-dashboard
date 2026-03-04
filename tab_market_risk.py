@@ -613,9 +613,7 @@ def _chart_lt(df):
 
     fig = make_subplots(
         rows=2, cols=1, shared_xaxes=True,
-        vertical_spacing=0.06, row_heights=[0.60, 0.40],
-        subplot_titles=("S&P 500 \u2014 Bull/Bear Overlay (Log Scale)",
-                        "Long Term Composite Score"),
+        vertical_spacing=0.06, row_heights=[0.65, 0.35],
     )
 
     # ── Row 1: S&P 500 with bull/bear colouring ──────────────────────────────
@@ -632,26 +630,30 @@ def _chart_lt(df):
         mode="lines", line=dict(color="#ff4444", width=2.0),
         connectgaps=False), row=1, col=1)
 
-    # ── Row 2: composite bar chart ────────────────────────────────────────────
-    fig.add_trace(go.Bar(
-        x=comp.index, y=comp, name="Composite",
-        marker=dict(color="#ff6600", opacity=0.85)),
-        row=2, col=1)
-    fig.add_hline(y=2, line_dash="dot",
-                  line_color="#333333", line_width=1.5, row=2, col=1)
+    # ── Row 2: composite line + filled area ───────────────────────────────────
+    fig.add_trace(go.Scatter(
+        x=comp.index, y=comp.values,
+        mode="lines",
+        line=dict(color="#ff6600", width=1.5),
+        fill="tozeroy",
+        fillcolor="rgba(255, 102, 0, 0.15)",
+        name="Composite",
+        showlegend=True), row=2, col=1)
+    fig.add_trace(go.Scatter(
+        x=[comp.index[0], comp.index[-1]], y=[2, 2],
+        mode="lines",
+        line=dict(color="#333333", dash="dot", width=1),
+        showlegend=False), row=2, col=1)
 
     # ── Layout ────────────────────────────────────────────────────────────────
     fig.update_layout(
-        plot_bgcolor=_C, paper_bgcolor=_P, height=600,
+        plot_bgcolor=_C, paper_bgcolor=_P, height=700,
         margin=dict(l=60, r=40, t=40, b=40),
         font=dict(color=_T, family="Inter, Arial, sans-serif", size=11),
         legend=dict(orientation="h", x=0.5, xanchor="center", y=1.02,
                     bgcolor="rgba(0,0,0,0)",
                     font=dict(color=_T, size=11)),
-        bargap=0,
     )
-    fig.update_annotations(
-        font=dict(color=_T, size=12, family="Inter, Arial, sans-serif"))
 
     # ── Axes ──────────────────────────────────────────────────────────────────
     _xax_style = dict(showgrid=False, zeroline=False,
@@ -662,13 +664,11 @@ def _chart_lt(df):
 
     fig.update_yaxes(
         tickfont=dict(color=_T, size=11),
-        title_text="S&P 500 (Log)", title_font=dict(color=_T, size=11),
         type="log", showgrid=True, gridcolor=_G,
         zeroline=False, linecolor=_B,
         row=1, col=1)
     fig.update_yaxes(
         tickfont=dict(color=_T, size=11),
-        title_text="Composite", title_font=dict(color=_T, size=11),
         showgrid=True, gridcolor=_G, dtick=1,
         zeroline=False, linecolor=_B, range=[0, 3],
         row=2, col=1)

@@ -680,43 +680,83 @@ def _chart_thm(df):
     comp_full  = df["Trend_Composite"]
     # Resample to business days to eliminate weekend gaps
     spx_full = spx_full.resample("B").last().ffill()
-    sig_r_full = df["Trend"].reindex(spx_full.index).ffill().bfill().fillna(0).astype(int).bfill().fillna(0).astype(int)
+    sig_r_full = (df["Trend"].reindex(spx_full.index)
+                  .ffill().bfill().fillna(0).astype(int))
 
     comp_start = comp_full.first_valid_index() or spx_full.index[0]
     spx   = spx_full[spx_full.index >= comp_start]
     comp  = comp_full[comp_full.index >= comp_start]
     sig_r = sig_r_full[sig_r_full.index >= comp_start]
 
-    fig = make_subplots(rows=2, cols=1, shared_xaxes=True,
-                        vertical_spacing=0.05, row_heights=[0.60, 0.40],
-                        subplot_titles=("S&P 500 Price with Trend Overlay (Log Scale)",
-                                        "Trend Health Model"))
-    fig.add_trace(go.Scatter(x=spx.index, y=spx, name="S&P 500",
-                             mode="lines", line=dict(color=WHITE, width=1.2),
-                             connectgaps=False), row=1, col=1)
-    fig.add_trace(go.Scatter(x=spx.index, y=spx.where(sig_r == 1), name="Bullish",
-                             mode="lines", line=dict(color=LIME, width=2.0),
-                             connectgaps=False), row=1, col=1)
-    fig.add_trace(go.Scatter(x=spx.index, y=spx.where(sig_r == 0), name="Bearish",
-                             mode="lines", line=dict(color=RED, width=2.0),
-                             connectgaps=False), row=1, col=1)
-    fig.add_trace(go.Scatter(x=comp.index, y=comp,
-                             name="Trend Health Model", mode="lines",
-                             line=dict(color=ORANGE, width=1.8),
-                             connectgaps=True), row=2, col=1)
-    fig.add_hline(y=55, line_dash="dot",
-                  line_color="rgba(255,255,255,0.3)", line_width=1.5, row=2, col=1)
-    layout = _layout(620)
-    layout["title"] = dict(text="S&P 500 vs Trend Health Model with Overlay",
-                           font=dict(color=WHITE, size=13))
-    fig.update_layout(**layout)
-    fig.update_xaxes(**_xax(), row=1, col=1)
-    fig.update_xaxes(**_xax(), row=2, col=1)
-    fig.update_yaxes(**_yax(WHITE, log=True, grid=True),
-                     title_text="S&P 500 (Log Scale)", row=1, col=1)
-    fig.update_yaxes(**_yax(ORANGE), title_text="Trend Health Model (%)",
-                     row=2, col=1, range=[-2, 105])
+    _C = "#141414"   # chart bg
+    _P = "#0f0f0f"   # paper bg
+    _G = "#1e1e1e"   # gridlines
+    _T = "#888888"   # text / ticks
+    _B = "#222222"   # axis lines
+
+    fig = make_subplots(
+        rows=2, cols=1, shared_xaxes=True,
+        vertical_spacing=0.06, row_heights=[0.65, 0.35],
+    )
+
+    # Row 1: S&P 500 with bull/bear colouring
+    fig.add_trace(go.Scatter(
+        x=spx.index, y=spx, name="S&P 500",
+        mode="lines", line=dict(color="#444444", width=1.2),
+        connectgaps=False), row=1, col=1)
+    fig.add_trace(go.Scatter(
+        x=spx.index, y=spx.where(sig_r >= 1), name="Bull",
+        mode="lines", line=dict(color="#00c896", width=2.0),
+        connectgaps=False), row=1, col=1)
+    fig.add_trace(go.Scatter(
+        x=spx.index, y=spx.where(sig_r == 0), name="Bear",
+        mode="lines", line=dict(color="#ff4444", width=2.0),
+        connectgaps=False), row=1, col=1)
+
+    # Row 2: health model line + filled area
+    fig.add_trace(go.Scatter(
+        x=comp.index, y=comp.values,
+        mode="lines",
+        line=dict(color="#ff6600", width=1.5),
+        fill="tozeroy",
+        fillcolor="rgba(255, 102, 0, 0.15)",
+        name="Health Model",
+        showlegend=True), row=2, col=1)
+    fig.add_trace(go.Scatter(
+        x=[comp.index[0], comp.index[-1]], y=[55, 55],
+        mode="lines",
+        line=dict(color="#333333", dash="dot", width=1),
+        showlegend=False), row=2, col=1)
+
+    # Layout
+    fig.update_layout(
+        plot_bgcolor=_C, paper_bgcolor=_P, height=700,
+        margin=dict(l=60, r=40, t=40, b=40),
+        font=dict(color=_T, family="Inter, Arial, sans-serif", size=11),
+        legend=dict(orientation="h", x=0.5, xanchor="center", y=1.02,
+                    bgcolor="rgba(0,0,0,0)",
+                    font=dict(color=_T, size=11)),
+    )
+
+    # Axes
+    _xax_style = dict(showgrid=False, zeroline=False,
+                      tickfont=dict(color=_T, size=11),
+                      linecolor=_B, rangebreaks=RB)
+    fig.update_xaxes(**_xax_style, row=1, col=1)
+    fig.update_xaxes(**_xax_style, row=2, col=1)
+
+    fig.update_yaxes(
+        tickfont=dict(color=_T, size=11),
+        type="log", showgrid=True, gridcolor=_G,
+        zeroline=False, linecolor=_B,
+        row=1, col=1)
+    fig.update_yaxes(
+        tickfont=dict(color=_T, size=11),
+        showgrid=True, gridcolor=_G,
+        zeroline=False, linecolor=_B, range=[-2, 105],
+        row=2, col=1)
     return fig
+
 
 
 def _ind_chart(title, ind_df, col, spx_s,
@@ -899,27 +939,72 @@ def render():
     st.markdown(_build_table("Long Term Indicators", _lt_rows),  unsafe_allow_html=True)
     st.markdown(_build_table("Health Model Indicators", _thm_rows, title_top_margin="32px"), unsafe_allow_html=True)
 
-    # ══════════════════════════════════════════════════════════════════════════
+    # ════════════════════════════════════════════════════════════════════════════
     #  SECTION 1 — Long Term Trend Composite
-    # ══════════════════════════════════════════════════════════════════════════
+    # ════════════════════════════════════════════════════════════════════════════
     st.markdown('<p style="font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;color:#ff6600;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 12px 0;">Long Term Composite</p>', unsafe_allow_html=True)
     st.plotly_chart(_chart_lt(df_lt), width='stretch')
 
-    lt_ind_cols = [c for c in df_lt.columns
-                   if c not in ("S&P500", "Composite", "Trend")]
-    latest_lt   = int(df_lt["Composite"].dropna().iloc[-1])
-    c1, c2, c3  = st.columns(3)
-    c1.metric("Composite Score", f"{latest_lt} / {len(lt_ind_cols)}",
-              delta="BULL" if df_lt["Trend"].dropna().iloc[-1] == 1 else "BEAR")
-    c2.metric("OECD CLI",
-              "BULL" if "OECD_CLI" in df_lt.columns
-              and df_lt["OECD_CLI"].iloc[-1] == 1 else "BEAR")
-    c3.metric("Credit Spreads",
-              "BULL" if "Credit_Spreads" in df_lt.columns
-              and df_lt["Credit_Spreads"].iloc[-1] == 1
-              else "BEAR" if "Credit_Spreads" in df_lt.columns else "N/A")
+    # LT info cards
+    lt_ind_cols   = [c for c in df_lt.columns if c not in ("S&P500", "Composite", "Trend")]
+    latest_lt     = int(df_lt["Composite"].dropna().iloc[-1])
+    lt_trend_s    = df_lt["Trend"].dropna()
+    lt_is_bull    = lt_trend_s.iloc[-1] == 1
+    lt_chg_dates  = lt_trend_s[lt_trend_s.diff().abs() > 0]
+    lt_regime_str = lt_chg_dates.index[-1].strftime("%b %d, %Y") if len(lt_chg_dates) else "—"
+    lt_update_str = df_lt.dropna(subset=["Composite"]).index[-1].strftime("%b %d, %Y")
+    lt_spx_s      = df_lt["S&P500"].dropna()
+    lt_spx_price  = lt_spx_s.iloc[-1]
+    lt_spx_chg    = (lt_spx_s.iloc[-1] / lt_spx_s.iloc[-2] - 1) * 100 if len(lt_spx_s) >= 2 else 0
+    _lt_accent    = "#ff6600" if lt_is_bull else "#ff4444"
+    _lt_bull_col  = "#00c896" if lt_is_bull else "#ff4444"
+    _lt_bull_txt  = "BULL" if lt_is_bull else "BEAR"
+    _lt_chg_col   = "#00c896" if lt_spx_chg > 0 else ("#ff4444" if lt_spx_chg < 0 else "#888888")
+    _card = "background:#141414;border-radius:12px;border:1px solid #2a2a2a;padding:20px 24px;flex:1;position:relative;overflow:hidden;"
+    _lbl  = "font-family:Inter,sans-serif;font-size:0.7rem;color:#888888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;"
+    _val  = "font-family:Inter,sans-serif;font-size:1.8rem;font-weight:600;color:#ffffff;line-height:1;"
+    _sub  = "font-family:Inter,sans-serif;font-size:0.75rem;margin-top:6px;font-weight:600;"
+    _acc  = "position:absolute;bottom:0;left:0;right:0;height:2px;"
+    st.markdown(f"""
+<div style='display:flex;gap:16px;margin-bottom:24px;'>
+<div style='{_card}'><div style='{_lbl}'>COMPOSITE SCORE</div><div style='{_val}'>{latest_lt} / {len(lt_ind_cols)}</div><div style='{_sub}color:{_lt_bull_col};'>{_lt_bull_txt}</div><div style='{_acc}background:{_lt_accent};'></div></div>
+<div style='{_card}'><div style='{_lbl}'>LAST REGIME CHANGE</div><div style='{_val}'>{lt_regime_str}</div><div style='{_acc}background:#2a2a2a;'></div></div>
+<div style='{_card}'><div style='{_lbl}'>LAST UPDATE</div><div style='{_val}'>{lt_update_str}</div><div style='{_acc}background:#2a2a2a;'></div></div>
+<div style='{_card}'><div style='{_lbl}'>S&P 500</div><div style='{_val}'>{lt_spx_price:,.2f}</div><div style='{_sub}color:{_lt_chg_col};'>{lt_spx_chg:+.2f}%</div><div style='{_acc}background:#2a2a2a;'></div></div>
+</div>""", unsafe_allow_html=True)
 
-    st.markdown('<p style="font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;color:#ff6600;text-transform:uppercase;letter-spacing:0.12em;margin:16px 0 12px 0;">Individual Long Term Indicators</p>', unsafe_allow_html=True)
+    # ════════════════════════════════════════════════════════════════════════════
+    #  SECTION 2 — Trend Health Model
+    # ════════════════════════════════════════════════════════════════════════════
+    st.markdown('<p style="font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;color:#ff6600;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 12px 0;">Trend Health Model</p>', unsafe_allow_html=True)
+    st.plotly_chart(_chart_thm(df_thm), width='stretch')
+
+    # THM info cards
+    thm_comp       = df_thm["Trend_Composite"].dropna().iloc[-1]
+    thm_is_bull    = thm_comp > 55
+    thm_trend_s    = df_thm["Trend"].dropna()
+    thm_chg_dates  = thm_trend_s[thm_trend_s.diff().abs() > 0]
+    thm_regime_str = thm_chg_dates.index[-1].strftime("%b %d, %Y") if len(thm_chg_dates) else "—"
+    thm_update_str = df_thm.dropna(subset=["Trend_Composite"]).index[-1].strftime("%b %d, %Y")
+    thm_spx_s      = df_thm["S&P500"].dropna()
+    thm_spx_price  = thm_spx_s.iloc[-1]
+    thm_spx_chg    = (thm_spx_s.iloc[-1] / thm_spx_s.iloc[-2] - 1) * 100 if len(thm_spx_s) >= 2 else 0
+    _thm_accent    = "#ff6600" if thm_is_bull else "#ff4444"
+    _thm_bull_col  = "#00c896" if thm_is_bull else "#ff4444"
+    _thm_bull_txt  = "BULL" if thm_is_bull else "BEAR"
+    _thm_chg_col   = "#00c896" if thm_spx_chg > 0 else ("#ff4444" if thm_spx_chg < 0 else "#888888")
+    st.markdown(f"""
+<div style='display:flex;gap:16px;margin-bottom:32px;'>
+<div style='{_card}'><div style='{_lbl}'>HEALTH SCORE</div><div style='{_val}'>{thm_comp:.0f}%</div><div style='{_sub}color:{_thm_bull_col};'>{_thm_bull_txt}</div><div style='{_acc}background:{_thm_accent};'></div></div>
+<div style='{_card}'><div style='{_lbl}'>LAST REGIME CHANGE</div><div style='{_val}'>{thm_regime_str}</div><div style='{_acc}background:#2a2a2a;'></div></div>
+<div style='{_card}'><div style='{_lbl}'>LAST UPDATE</div><div style='{_val}'>{thm_update_str}</div><div style='{_acc}background:#2a2a2a;'></div></div>
+<div style='{_card}'><div style='{_lbl}'>S&P 500</div><div style='{_val}'>{thm_spx_price:,.2f}</div><div style='{_sub}color:{_thm_chg_col};'>{thm_spx_chg:+.2f}%</div><div style='{_acc}background:#2a2a2a;'></div></div>
+</div>""", unsafe_allow_html=True)
+
+    # ════════════════════════════════════════════════════════════════════════════
+    #  INDIVIDUAL INDICATORS
+    # ════════════════════════════════════════════════════════════════════════════
+    st.markdown('<p style="font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;color:#ff6600;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 12px 0;">Individual Indicators</p>', unsafe_allow_html=True)
     for title, col, ind_name, ind_col, label, start in [
         ("1. OECD CLI Diffusion Index",    "OECD_CLI",       "", "#f9ca24", "OECD CLI Strategy",     "1997-01-01"),
         ("2. Nasdaq 100 Cumulative Hi-Lo", "N100_HiLo",      "", "#4ecdc4", "N100 Hi-Lo Strategy",   "1999-01-01"),
@@ -932,48 +1017,21 @@ def render():
                 st.plotly_chart(fig, width='stretch')
             else:
                 st.warning(f"Chart unavailable: {err}")
-
-    st.divider()
-
-    # ══════════════════════════════════════════════════════════════════════════
-    #  SECTION 2 — Trend Health Model
-    # ══════════════════════════════════════════════════════════════════════════
-    st.markdown('<p style="font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;color:#ff6600;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 12px 0;">Trend Health Model</p>', unsafe_allow_html=True)
-    st.plotly_chart(_chart_thm(df_thm), width='stretch')
-
-    ind_thm      = [col for col in df_thm.columns
-                    if col not in ("S&P500", "Trend_Composite", "Trend")]
-    lt_ind_cols2 = [col for col in df_lt.columns
-                    if col not in ("S&P500", "Composite", "Trend")]
-    comp_now   = df_thm["Trend_Composite"].dropna().iloc[-1]
-    _thm_last  = df_thm[ind_thm].iloc[-1]
-    _lt_last   = df_lt[lt_ind_cols2].reindex(df_thm.index).ffill().iloc[-1]
-    bull_count = int(_thm_last.gt(0).sum())
-    total_ind  = len(ind_thm)
-    regime_chg = df_thm.index[df_thm["Trend"].diff().abs() > 0]
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Health Score", f"{comp_now:.0f}%",
-              delta="BULL" if df_thm["Trend"].dropna().iloc[-1] == 1 else "BEAR")
-    c2.metric("Bullish Indicators", f"{bull_count} / {total_ind}")
-    c3.metric("Last Regime Change",
-              str(regime_chg[-1].date()) if len(regime_chg) > 0 else "N/A")
-
-    st.markdown('<p style="font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;color:#ff6600;text-transform:uppercase;letter-spacing:0.12em;margin:16px 0 12px 0;">Individual Health Model Indicators</p>', unsafe_allow_html=True)
     for title, col, ind_col, label, start in [
-        ("4.  Volatility Regime (MOVE/VIX)",       "Vol_Regime", ORANGE,    "Vol Regime",         "2008-01-01"),
-        ("5.  NYSE 52-Week Hi-Lo Trend",            "HiLo_52W",  "#f9ca24", "Hi-Lo Strategy",     "1990-01-01"),
-        ("6.  Canary Model",                        "Canary",    "#4ecdc4", "Canary Strategy",    "2003-01-01"),
-        ("7.  % Stocks Above 200-Day SMA",          "Pct_200SMA",ORANGE,    "200 SMA Strategy",   "2002-01-01"),
-        ("8.  ACWI 200 SMA Breadth",                "ACWI_200",  "#4ecdc4", "ACWI Strategy",      "2007-01-01"),
-        ("9.  Cumulative A/D Line",                 "AD_Line",   "#4ecdc4", "A/D Strategy",       "2005-03-01"),
-        ("10. In/Out Indicator",                    "InOut",     ORANGE,    "In/Out Strategy",    "2002-01-01"),
-        ("11. VIX Term Structure",                  "VIX_TS",    "#f9ca24", "VIX TS Strategy",    "2007-01-01"),
-        ("12. HMM Regime Indicator",                "HMM",       LIME,      "HMM Strategy",       "1960-01-01"),
-        ("13. Quad 1 & 2",                          "Quad",      "#4ecdc4", "Quad Strategy",      "2014-01-01"),
-        ("14. Bitcoin Liquidity Proxy",             "BTC",       "#f9ca24", "BTC Strategy",       "2014-01-01"),
-        ("15. SuperTrend Long Term (ATR 252×12)",   "ST_LT",     LIME,      "ST LT Strategy",     "1990-01-01"),
-        ("16. SuperTrend Medium Term (ATR 63×9)",   "ST_MT",     LIME,      "ST MT Strategy",     "1990-01-01"),
-        ("17. SuperTrend Short Term (ATR 63×5)",    "ST_ST",     LIME,      "ST ST Strategy",     "1990-01-01"),
+        ("4.  Volatility Regime (MOVE/VIX)",       "Vol_Regime", ORANGE,    "Vol Regime",        "2008-01-01"),
+        ("5.  NYSE 52-Week Hi-Lo Trend",            "HiLo_52W",  "#f9ca24", "Hi-Lo Strategy",    "1990-01-01"),
+        ("6.  Canary Model",                        "Canary",    "#4ecdc4", "Canary Strategy",   "2003-01-01"),
+        ("7.  % Stocks Above 200-Day SMA",          "Pct_200SMA",ORANGE,    "200 SMA Strategy",  "2002-01-01"),
+        ("8.  ACWI 200 SMA Breadth",                "ACWI_200",  "#4ecdc4", "ACWI Strategy",     "2007-01-01"),
+        ("9.  Cumulative A/D Line",                 "AD_Line",   "#4ecdc4", "A/D Strategy",      "2005-03-01"),
+        ("10. In/Out Indicator",                    "InOut",     ORANGE,    "In/Out Strategy",   "2002-01-01"),
+        ("11. VIX Term Structure",                  "VIX_TS",    "#f9ca24", "VIX TS Strategy",   "2007-01-01"),
+        ("12. HMM Regime Indicator",                "HMM",       LIME,      "HMM Strategy",      "1960-01-01"),
+        ("13. Quad 1 & 2",                          "Quad",      "#4ecdc4", "Quad Strategy",     "2014-01-01"),
+        ("14. Bitcoin Liquidity Proxy",             "BTC",       "#f9ca24", "BTC Strategy",      "2014-01-01"),
+        ("15. SuperTrend Long Term (ATR 252×12)",   "ST_LT",     LIME,      "ST LT Strategy",    "1990-01-01"),
+        ("16. SuperTrend Medium Term (ATR 63×9)",   "ST_MT",     LIME,      "ST MT Strategy",    "1990-01-01"),
+        ("17. SuperTrend Short Term (ATR 63×5)",    "ST_ST",     LIME,      "ST ST Strategy",    "1990-01-01"),
         ("18. VIX Term Structure × HMM",            "VIX_HMM",   "#ff6b6b", "VIX×HMM Strategy",  "2007-01-01"),
     ]:
         with st.expander(title, expanded=False):

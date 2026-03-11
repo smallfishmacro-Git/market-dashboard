@@ -152,13 +152,14 @@ st.divider()
 # Their render() is only called when the user is on that tab.
 # This prevents WebSocket timeouts caused by running all tabs simultaneously.
 
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "Overview",
     "Market Breadth",
     "Volatility",
     "Market Risk",
     "Macro / Regime",
     "Buy the Dip",
+    "Strategy Map",
 ])
 
 # ── TAB 1: OVERVIEW ────────────────────────────────────────────────────────────
@@ -343,3 +344,165 @@ with tab5:
 with tab6:
     import tab_buy_the_dip
     tab_buy_the_dip.render()
+
+# ── TAB 7: STRATEGY MAP ────────────────────────────────────────────────────────
+with tab7:
+    strategy_map_html = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8"/>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+      <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:#070710; }
+        button { cursor:pointer; outline:none; }
+      </style>
+    </head>
+    <body>
+      <div id="root"></div>
+      <script type="text/babel">
+        const { useState } = React;
+
+        const STRATEGIES = [
+          { group:"Select Smallcaps", name:"Susanno", method:"Classic", norm:"Rank", region:"US", weight:20, system:"BenjAImin SmallMicro v4", buy:["sector \u2260 FINANCIAL","AvgDailyTot(20) < 1M"], sell:["Full Rebal"], sell2:[] },
+          { group:"Select Smallcaps", name:"Red Hawk", method:"AI - FND", norm:"Rank", region:"US", weight:20, system:"FND_3MTot_190F_Rank_US_LGBM", buy:["MedianDailyTot(20) > 25K","Price > 1"], sell:["Rank < 98.5"], sell2:[] },
+          { group:"Select Smallcaps", name:"Kong Gun", method:"AI - FND", norm:"Zscore", region:"US", weight:20, system:"FND_3MTot_190F_Zscore_US_LGBM", buy:["MedianDailyTot(20) > 25K","Price > 1","AvgDailyTot(20) < 1M"], sell:["Rank < 98"], sell2:[] },
+          { group:"Select Smallcaps", name:"Asura", method:"AI - FND", norm:"Rank", region:"North America", weight:20, system:"FND_3MTot_191F_Rank_NAM_LGBM", buy:["MedianDailyTot(20) > 25K","Price > 1",'CurQEPSMean >= CurQEPS13WkAgo OR FRank(\\"ActualGr%PQ(#EPS)\\",#all,#DESC,#ExclNA) > 80'], sell:["Rank < 97"], sell2:[] },
+          { group:"Select Smallcaps", name:"Nitoryu", method:"AI - FND", norm:"Zscore", region:"North Atlantic", weight:20, system:"FND_3MTot_191F_Zscore_NATL_LGBM", buy:["MedianDailyTot(20) > 50K","Price > 0.5","AvgDailyTot(20) < 1M"], sell:["RankPos > 30"], sell2:[] },
+          { group:"Alpha Smallcaps", name:"Amaterasu", method:"Classic", norm:"Rank", region:"US", weight:10, system:"BenjAImin SmallMicro v4", buy:["sector \u2260 FINANCIAL","AvgDailyTot(20) < 1M"], sell:["Full Rebal"], sell2:[] },
+          { group:"Alpha Smallcaps", name:"Gear Fifth", method:"AI - FND", norm:"Rank", region:"US", weight:10, system:"FND_3MTot_190F_Rank_US_LGBM", buy:["MedianDailyTot(20) > 25K","Price > 1"], sell:["Rank < 99"], sell2:[] },
+          { group:"Alpha Smallcaps", name:"King Cobra", method:"AI - FND", norm:"Zscore", region:"US", weight:10, system:"FND_3MTot_190F_Zscore_US_LGBM", buy:["MedianDailyTot(20) > 25K","Price > 1","AvgDailyTot(20) < 1M"], sell:["Rank < 99"], sell2:[] },
+          { group:"Alpha Smallcaps", name:"Jigoku", method:"AI - FND", norm:"Rank", region:"North America", weight:10, system:"FND_3MTot_191F_Rank_NAM_LGBM", buy:["MedianDailyTot(20) > 50K","Price > 1",'CurQEPSMean >= CurQEPS13WkAgo OR FRank(\\"ActualGr%PQ(#EPS)\\",#all,#DESC,#ExclNA) > 80'], sell:["Rank < 98"], sell2:[] },
+          { group:"Alpha Smallcaps", name:"Santoryu", method:"AI - FND", norm:"Zscore", region:"North Atlantic", weight:10, system:"FND_3MTot_191F_Zscore_NATL_LGBM", buy:["MedianDailyTot(20) > 25K","Price > 0.5","AvgDailyTot(20) < 1M"], sell:["RankPos > 20"], sell2:[] },
+          { group:"Alpha Smallcaps", name:"Rengoku", method:"AI - SM", norm:"Rank", region:"US", weight:10, system:"SM_3MRel_179F_Rank_US_LGBM", buy:["MedianDailyTot(20) > 50K","Price > 1","ActualGr%PQ(#EPS) > 0","ActualGr%PQ(#EPS) > 0"], sell:["Rank < 97"], sell2:[] },
+          { group:"Alpha Smallcaps", name:"Shiranui", method:"AI - SM", norm:"Zscore", region:"US", weight:10, system:"SM_3MRel_179F_Zscore_US_LGBM", buy:["MedianDailyTot(20) > 50K","Rank > 99","CurQEPSMean > CurQEPS1WkAgo","CurQEPSMean > CurQEPS1WkAgo"], sell:["Rank < 98"], sell2:["CurQEPSMean < CurQEPS1WkAgo"] },
+          { group:"Alpha Smallcaps", name:"Nobori", method:"AI - SM", norm:"Rank", region:"US", weight:10, system:"SM_3MRel_179F_Rank_US_LGBM", buy:["MedianDailyTot(20) > 50K","Price > 1","Rank > 99","%(CurQEPSMean, CurQEPS1WkAgo) > 0"], sell:["Rank < 99"], sell2:[] },
+          { group:"Alpha Smallcaps", name:"Mizu", method:"AI - SM", norm:"Zscore", region:"US", weight:10, system:"SM_3MTot_179F_Zscore_US_LGBM", buy:["MedianDailyTot(20) > 50K","Price > 1","Rank > 99","CurQEPSMean > CurQEPS1WkAgo","ActualGr%PQ(#EPS) > 0"], sell:["Rank < 99"], sell2:[] },
+          { group:"Alpha Smallcaps", name:"Nagi", method:"AI - SM", norm:"Rank", region:"US", weight:10, system:"SM_3MTot_179F_Rank_US_LGBM", buy:["MedianDailyTot(20) > 50K","Price > 1","Rank > 99","CurQEPSMean > CurQEPS1WkAgo"], sell:["Rank < 99"], sell2:[] },
+        ];
+
+        const RC = { "US":"#f97316", "North America":"#3b82f6", "North Atlantic":"#a855f7" };
+        const NC = { "Rank":"#22d3ee", "Zscore":"#86efac" };
+        const MC = { "Classic":"#fbbf24", "AI - FND":"#38bdf8", "AI - SM":"#f472b6" };
+
+        function Tag({ label, color }) {
+          return <span style={{ background:color+"22", color, border:"1px solid "+color+"55", borderRadius:3, padding:"1px 6px", fontSize:9, fontFamily:"monospace", fontWeight:700, whiteSpace:"nowrap" }}>{label}</span>;
+        }
+
+        function Chip({ text, type }) {
+          const c = { buy:{bg:"#052e16",border:"#166534",text:"#4ade80"}, sell:{bg:"#2d0a0a",border:"#7f1d1d",text:"#f87171"} }[type];
+          return <span style={{ background:c.bg, border:"1px solid "+c.border, color:c.text, borderRadius:3, padding:"2px 6px", fontSize:9, fontFamily:"monospace", whiteSpace:"nowrap", display:"inline-block", margin:"2px 2px" }}>{text}</span>;
+        }
+
+        function Card({ s, selected, onClick }) {
+          const rc = RC[s.region]||"#888";
+          const mc = MC[s.method]||"#888";
+          return (
+            <div onClick={onClick} style={{ background:selected?"#14142a":"#0c0c14", border:"1px solid "+(selected?"#f97316":"#1e1e30"), borderRadius:8, padding:"12px 14px 10px 16px", cursor:"pointer", position:"relative", overflow:"hidden" }}>
+              <div style={{ position:"absolute", left:0, top:0, bottom:0, width:3, background:rc }} />
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:6 }}>
+                <div>
+                  <div style={{ fontWeight:700, fontSize:14, color:"#f0f0f0", fontFamily:"sans-serif" }}>{s.name}</div>
+                  <div style={{ color:"#3a3a55", fontSize:9, fontFamily:"monospace", marginTop:2 }}>{s.system}</div>
+                </div>
+                <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4 }}>
+                  <span style={{ background:"#f97316", color:"#000", fontFamily:"monospace", fontWeight:700, fontSize:10, padding:"2px 7px", borderRadius:3 }}>{s.weight}%</span>
+                  <div style={{ display:"flex", gap:3, flexWrap:"wrap", justifyContent:"flex-end" }}>
+                    <Tag label={s.method} color={mc} />
+                    <Tag label={s.region} color={rc} />
+                    <Tag label={s.norm} color={NC[s.norm]} />
+                  </div>
+                </div>
+              </div>
+              <div style={{ display:"flex", flexWrap:"wrap" }}>
+                {s.buy.map((b,i)=><Chip key={"b"+i} text={b} type="buy"/>)}
+                {s.sell.map((b,i)=><Chip key={"s"+i} text={b} type="sell"/>)}
+                {s.sell2.map((b,i)=><Chip key={"s2"+i} text={b} type="sell"/>)}
+              </div>
+            </div>
+          );
+        }
+
+        function App() {
+          const [sel, setSel] = useState(null);
+          const [fR, setFR] = useState("All");
+          const [fN, setFN] = useState("All");
+          const [fM, setFM] = useState("All");
+          const regions = ["All","US","North America","North Atlantic"];
+          const norms = ["All","Rank","Zscore"];
+          const methods = ["All","Classic","AI - FND","AI - SM"];
+          const groups = ["Select Smallcaps","Alpha Smallcaps"];
+          const filtered = STRATEGIES.filter(s=>(fR==="All"||s.region===fR)&&(fN==="All"||s.norm===fN)&&(fM==="All"||s.method===fM));
+          const gw = g => STRATEGIES.filter(s=>s.group===g).reduce((a,s)=>a+s.weight,0);
+          const btn = a => ({ background:a?"#f97316":"#0e0e1a", color:a?"#000":"#555", border:"1px solid "+(a?"#f97316":"#1e1e30"), borderRadius:4, padding:"4px 11px", fontSize:10, fontFamily:"monospace", cursor:"pointer", fontWeight:a?700:400 });
+          return (
+            <div style={{ background:"#070710", minHeight:"100vh", color:"#f0f0f0", padding:"24px 28px", fontFamily:"monospace" }}>
+              <div style={{ marginBottom:20 }}>
+                <h1 style={{ margin:0, fontSize:20, fontWeight:800, color:"#f97316", fontFamily:"sans-serif", letterSpacing:"0.04em" }}>PORTFOLIO STRATEGY MAP</h1>
+                <div style={{ marginTop:6, fontSize:10, color:"#333" }}>
+                  {groups.map(g=><span key={g} style={{ marginRight:20 }}><span style={{color:"#444"}}>{g}:</span> <span style={{color:"#f97316"}}>{gw(g)}%</span><span style={{color:"#2a2a40"}}> \u00b7 {STRATEGIES.filter(s=>s.group===g).length} strategies</span></span>)}
+                  <span style={{ marginLeft:10 }}><span style={{color:"#444"}}>Methods:</span>{" "}
+                    <span style={{color:MC["Classic"]}}>{STRATEGIES.filter(s=>s.method==="Classic").length}\u00d7 Classic</span>{" "}
+                    <span style={{color:MC["AI - FND"]}}>{STRATEGIES.filter(s=>s.method==="AI - FND").length}\u00d7 FND</span>{" "}
+                    <span style={{color:MC["AI - SM"]}}>{STRATEGIES.filter(s=>s.method==="AI - SM").length}\u00d7 SM</span>
+                  </span>
+                </div>
+              </div>
+              <div style={{ display:"flex", gap:20, marginBottom:16, flexWrap:"wrap", alignItems:"center" }}>
+                <div style={{ display:"flex", gap:5, alignItems:"center" }}>
+                  <span style={{ color:"#333", fontSize:9, marginRight:4 }}>REGION</span>
+                  {regions.map(r=><button key={r} style={btn(fR===r)} onClick={()=>setFR(r)}>{r}</button>)}
+                </div>
+                <div style={{ display:"flex", gap:5, alignItems:"center" }}>
+                  <span style={{ color:"#333", fontSize:9, marginRight:4 }}>NORM</span>
+                  {norms.map(n=><button key={n} style={btn(fN===n)} onClick={()=>setFN(n)}>{n}</button>)}
+                </div>
+                <div style={{ display:"flex", gap:5, alignItems:"center" }}>
+                  <span style={{ color:"#333", fontSize:9, marginRight:4 }}>METHOD</span>
+                  {methods.map(m=><button key={m} style={btn(fM===m)} onClick={()=>setFM(m)}>{m}</button>)}
+                </div>
+                <div style={{ marginLeft:"auto", display:"flex", gap:16 }}>
+                  {[["#4ade80","Buy"],["#f87171","Sell"]].map(([c,l])=>(
+                    <span key={l} style={{ display:"flex", alignItems:"center", gap:5, fontSize:9, color:"#444" }}>
+                      <span style={{ width:8, height:8, background:c, borderRadius:2, display:"inline-block", opacity:0.8 }}/> {l}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display:"flex", height:5, borderRadius:3, overflow:"hidden", marginBottom:24, gap:1 }}>
+                {filtered.map(s=><div key={s.name} title={s.name+": "+s.weight+"%"} style={{ flex:s.weight, background:RC[s.region]||"#555", opacity:0.65 }}/>)}
+              </div>
+              {groups.map(g=>{
+                const gs=filtered.filter(s=>s.group===g);
+                if(!gs.length) return null;
+                return (
+                  <div key={g} style={{ marginBottom:30 }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:12 }}>
+                      <span style={{ fontSize:10, fontWeight:700, color:"#f97316", letterSpacing:"0.14em" }}>{g.toUpperCase()}</span>
+                      <div style={{ flex:1, height:1, background:"#12122a" }}/>
+                      <span style={{ fontSize:9, color:"#2a2a40" }}>{gw(g)}% \u00b7 {STRATEGIES.filter(s=>s.group===g).length}\u00d7 {STRATEGIES.filter(s=>s.group===g)[0]?.weight}% each</span>
+                    </div>
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(310px, 1fr))", gap:10 }}>
+                      {gs.map(s=><Card key={s.name} s={s} selected={sel===s.name} onClick={()=>setSel(sel===s.name?null:s.name)}/>)}
+                    </div>
+                  </div>
+                );
+              })}
+              <div style={{ borderTop:"1px solid #10101e", paddingTop:14, display:"flex", gap:20, flexWrap:"wrap" }}>
+                {Object.entries(RC).map(([r,c])=><span key={r} style={{ display:"flex", alignItems:"center", gap:6, fontSize:9, color:"#333" }}><span style={{ width:12, height:3, background:c, borderRadius:2, display:"inline-block" }}/>{r}</span>)}
+                {Object.entries(NC).map(([n,c])=><span key={n} style={{ display:"flex", alignItems:"center", gap:6, fontSize:9, color:"#333" }}><span style={{ width:8, height:8, borderRadius:"50%", border:"1px solid "+c, display:"inline-block" }}/>{n}</span>)}
+                {Object.entries(MC).map(([m,c])=><span key={m} style={{ display:"flex", alignItems:"center", gap:6, fontSize:9, color:"#333" }}><span style={{ width:8, height:4, background:c, borderRadius:1, display:"inline-block" }}/>{m}</span>)}
+              </div>
+            </div>
+          );
+        }
+
+        ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+      </script>
+    </body>
+    </html>
+    """
+    st.components.v1.html(strategy_map_html, height=950, scrolling=True)

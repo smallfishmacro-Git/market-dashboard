@@ -389,12 +389,12 @@ with tab7:
         const MC = { "Classic":"#fbbf24", "AI - FND":"#38bdf8", "AI - SM":"#f472b6" };
 
         function Tag({ label, color }) {
-          return <span style={{ background:color+"22", color, border:"1px solid "+color+"55", borderRadius:3, padding:"1px 6px", fontSize:9, fontFamily:"monospace", fontWeight:700, whiteSpace:"nowrap" }}>{label}</span>;
+          return <span style={{ background:color+"22", color, border:"1px solid "+color+"55", borderRadius:3, padding:"2px 8px", fontSize:12, fontFamily:"monospace", fontWeight:700, whiteSpace:"nowrap" }}>{label}</span>;
         }
 
         function Chip({ text, type }) {
           const c = { buy:{bg:"#052e16",border:"#166534",text:"#4ade80"}, sell:{bg:"#2d0a0a",border:"#7f1d1d",text:"#f87171"} }[type];
-          return <span style={{ background:c.bg, border:"1px solid "+c.border, color:c.text, borderRadius:3, padding:"2px 6px", fontSize:9, fontFamily:"monospace", whiteSpace:"nowrap", display:"inline-block", margin:"2px 2px" }}>{text}</span>;
+          return <span style={{ background:c.bg, border:"1px solid "+c.border, color:c.text, borderRadius:3, padding:"3px 8px", fontSize:12, fontFamily:"monospace", whiteSpace:"nowrap", display:"inline-block", margin:"2px 2px" }}>{text}</span>;
         }
 
         function Card({ s, selected, onClick }) {
@@ -405,11 +405,11 @@ with tab7:
               <div style={{ position:"absolute", left:0, top:0, bottom:0, width:3, background:rc }} />
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:6 }}>
                 <div>
-                  <div style={{ fontWeight:700, fontSize:14, color:"#f0f0f0", fontFamily:"sans-serif" }}>{s.name}</div>
-                  <div style={{ color:"#3a3a55", fontSize:9, fontFamily:"monospace", marginTop:2 }}>{s.system}</div>
+                  <div style={{ fontWeight:700, fontSize:17, color:"#f0f0f0", fontFamily:"sans-serif" }}>{s.name}</div>
+                  <div style={{ color:"#3a3a55", fontSize:12, fontFamily:"monospace", marginTop:2 }}>{s.system}</div>
                 </div>
                 <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4 }}>
-                  <span style={{ background:"#f97316", color:"#000", fontFamily:"monospace", fontWeight:700, fontSize:10, padding:"2px 7px", borderRadius:3 }}>{s.weight}%</span>
+                  <span style={{ background:"#f97316", color:"#000", fontFamily:"monospace", fontWeight:700, fontSize:13, padding:"3px 9px", borderRadius:3 }}>{s.weight}%</span>
                   <div style={{ display:"flex", gap:3, flexWrap:"wrap", justifyContent:"flex-end" }}>
                     <Tag label={s.method} color={mc} />
                     <Tag label={s.region} color={rc} />
@@ -437,12 +437,12 @@ with tab7:
           const groups = ["Select Smallcaps","Alpha Smallcaps"];
           const filtered = STRATEGIES.filter(s=>(fR==="All"||s.region===fR)&&(fN==="All"||s.norm===fN)&&(fM==="All"||s.method===fM));
           const gw = g => STRATEGIES.filter(s=>s.group===g).reduce((a,s)=>a+s.weight,0);
-          const btn = a => ({ background:a?"#f97316":"#0e0e1a", color:a?"#000":"#555", border:"1px solid "+(a?"#f97316":"#1e1e30"), borderRadius:4, padding:"4px 11px", fontSize:10, fontFamily:"monospace", cursor:"pointer", fontWeight:a?700:400 });
+          const btn = a => ({ background:a?"#f97316":"#0e0e1a", color:a?"#000":"#555", border:"1px solid "+(a?"#f97316":"#1e1e30"), borderRadius:4, padding:"5px 14px", fontSize:13, fontFamily:"monospace", cursor:"pointer", fontWeight:a?700:400 });
           return (
             <div style={{ background:"#070710", minHeight:"100vh", color:"#f0f0f0", padding:"24px 28px", fontFamily:"monospace" }}>
               <div style={{ marginBottom:20 }}>
-                <h1 style={{ margin:0, fontSize:20, fontWeight:800, color:"#f97316", fontFamily:"sans-serif", letterSpacing:"0.04em" }}>PORTFOLIO STRATEGY MAP</h1>
-                <div style={{ marginTop:6, fontSize:10, color:"#333" }}>
+                <h1 style={{ margin:0, fontSize:24, fontWeight:800, color:"#f97316", fontFamily:"sans-serif", letterSpacing:"0.04em" }}>PORTFOLIO STRATEGY MAP</h1>
+                <div style={{ marginTop:6, fontSize:13, color:"#333" }}>
                   {groups.map(g=><span key={g} style={{ marginRight:20 }}><span style={{color:"#444"}}>{g}:</span> <span style={{color:"#f97316"}}>{gw(g)}%</span><span style={{color:"#2a2a40"}}> \u00b7 {STRATEGIES.filter(s=>s.group===g).length} strategies</span></span>)}
                   <span style={{ marginLeft:10 }}><span style={{color:"#444"}}>Methods:</span>{" "}
                     <span style={{color:MC["Classic"]}}>{STRATEGIES.filter(s=>s.method==="Classic").length}\u00d7 Classic</span>{" "}
@@ -453,20 +453,20 @@ with tab7:
               </div>
               <div style={{ display:"flex", gap:20, marginBottom:16, flexWrap:"wrap", alignItems:"center" }}>
                 <div style={{ display:"flex", gap:5, alignItems:"center" }}>
-                  <span style={{ color:"#333", fontSize:9, marginRight:4 }}>REGION</span>
+                  <span style={{ color:"#333", fontSize:12, marginRight:4 }}>REGION</span>
                   {regions.map(r=><button key={r} style={btn(fR===r)} onClick={()=>setFR(r)}>{r}</button>)}
                 </div>
                 <div style={{ display:"flex", gap:5, alignItems:"center" }}>
-                  <span style={{ color:"#333", fontSize:9, marginRight:4 }}>NORM</span>
+                  <span style={{ color:"#333", fontSize:12, marginRight:4 }}>NORM</span>
                   {norms.map(n=><button key={n} style={btn(fN===n)} onClick={()=>setFN(n)}>{n}</button>)}
                 </div>
                 <div style={{ display:"flex", gap:5, alignItems:"center" }}>
-                  <span style={{ color:"#333", fontSize:9, marginRight:4 }}>METHOD</span>
+                  <span style={{ color:"#333", fontSize:12, marginRight:4 }}>METHOD</span>
                   {methods.map(m=><button key={m} style={btn(fM===m)} onClick={()=>setFM(m)}>{m}</button>)}
                 </div>
                 <div style={{ marginLeft:"auto", display:"flex", gap:16 }}>
                   {[["#4ade80","Buy"],["#f87171","Sell"]].map(([c,l])=>(
-                    <span key={l} style={{ display:"flex", alignItems:"center", gap:5, fontSize:9, color:"#444" }}>
+                    <span key={l} style={{ display:"flex", alignItems:"center", gap:5, fontSize:12, color:"#444" }}>
                       <span style={{ width:8, height:8, background:c, borderRadius:2, display:"inline-block", opacity:0.8 }}/> {l}
                     </span>
                   ))}
@@ -481,9 +481,9 @@ with tab7:
                 return (
                   <div key={g} style={{ marginBottom:30 }}>
                     <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:12 }}>
-                      <span style={{ fontSize:10, fontWeight:700, color:"#f97316", letterSpacing:"0.14em" }}>{g.toUpperCase()}</span>
+                      <span style={{ fontSize:13, fontWeight:700, color:"#f97316", letterSpacing:"0.14em" }}>{g.toUpperCase()}</span>
                       <div style={{ flex:1, height:1, background:"#12122a" }}/>
-                      <span style={{ fontSize:9, color:"#2a2a40" }}>{gw(g)}% \u00b7 {STRATEGIES.filter(s=>s.group===g).length}\u00d7 {STRATEGIES.filter(s=>s.group===g)[0]?.weight}% each</span>
+                      <span style={{ fontSize:12, color:"#2a2a40" }}>{gw(g)}% \u00b7 {STRATEGIES.filter(s=>s.group===g).length}\u00d7 {STRATEGIES.filter(s=>s.group===g)[0]?.weight}% each</span>
                     </div>
                     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(310px, 1fr))", gap:10 }}>
                       {gs.map(s=><Card key={s.name} s={s} selected={sel===s.name} onClick={()=>setSel(sel===s.name?null:s.name)}/>)}
@@ -492,9 +492,9 @@ with tab7:
                 );
               })}
               <div style={{ borderTop:"1px solid #10101e", paddingTop:14, display:"flex", gap:20, flexWrap:"wrap" }}>
-                {Object.entries(RC).map(([r,c])=><span key={r} style={{ display:"flex", alignItems:"center", gap:6, fontSize:9, color:"#333" }}><span style={{ width:12, height:3, background:c, borderRadius:2, display:"inline-block" }}/>{r}</span>)}
-                {Object.entries(NC).map(([n,c])=><span key={n} style={{ display:"flex", alignItems:"center", gap:6, fontSize:9, color:"#333" }}><span style={{ width:8, height:8, borderRadius:"50%", border:"1px solid "+c, display:"inline-block" }}/>{n}</span>)}
-                {Object.entries(MC).map(([m,c])=><span key={m} style={{ display:"flex", alignItems:"center", gap:6, fontSize:9, color:"#333" }}><span style={{ width:8, height:4, background:c, borderRadius:1, display:"inline-block" }}/>{m}</span>)}
+                {Object.entries(RC).map(([r,c])=><span key={r} style={{ display:"flex", alignItems:"center", gap:6, fontSize:12, color:"#333" }}><span style={{ width:12, height:3, background:c, borderRadius:2, display:"inline-block" }}/>{r}</span>)}
+                {Object.entries(NC).map(([n,c])=><span key={n} style={{ display:"flex", alignItems:"center", gap:6, fontSize:12, color:"#333" }}><span style={{ width:8, height:8, borderRadius:"50%", border:"1px solid "+c, display:"inline-block" }}/>{n}</span>)}
+                {Object.entries(MC).map(([m,c])=><span key={m} style={{ display:"flex", alignItems:"center", gap:6, fontSize:12, color:"#333" }}><span style={{ width:8, height:4, background:c, borderRadius:1, display:"inline-block" }}/>{m}</span>)}
               </div>
             </div>
           );

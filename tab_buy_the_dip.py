@@ -211,9 +211,15 @@ def chart_2_acwi(spx):
         oscillator = get_acwi_data()
     spx_a = spx.reindex(oscillator.index, method="ffill")
     signals = oscillator[oscillator == 0].index
-    return dual_chart("S&P 500 vs ACWI ETF Oscillator (% Above 10-Day MA)",
-                      spx_a["Last"], oscillator, "ACWI Oscillator (%)",
-                      signal_dates=signals)
+    fig = dual_chart("S&P 500 vs ACWI ETF Oscillator (% Above 10-Day MA)",
+                     spx_a["Last"], oscillator, "ACWI Oscillator (%)",
+                     signal_dates=signals)
+    # Pin x-axis to last 2 years so recent data is always visible
+    x_end   = oscillator.index[-1]
+    x_start = x_end - pd.DateOffset(years=2)
+    fig.update_xaxes(range=[x_start.strftime("%Y-%m-%d"),
+                             x_end.strftime("%Y-%m-%d")])
+    return fig
 
 
 def chart_3_mcclellan(spx):
@@ -463,7 +469,7 @@ def render():
         with st.spinner("Building composite signal (first load only — cached after this)..."):
             st.session_state.btd_composite = build_composite()
     df_comp = st.session_state.btd_composite
-    st.plotly_chart(chart_composite(df_comp), use_container_width=True)
+    st.plotly_chart(chart_composite(df_comp), width='stretch')
 
     latest = int(df_comp["Composite"].iloc[-1])
     col1, col2, col3 = st.columns(3)
@@ -491,6 +497,6 @@ def render():
     for title, fn in charts:
         with st.expander(title, expanded=False):
             try:
-                st.plotly_chart(fn(), use_container_width=True)
+                st.plotly_chart(fn(), width='stretch')
             except Exception as e:
                 st.error(f"Could not render chart: {e}")

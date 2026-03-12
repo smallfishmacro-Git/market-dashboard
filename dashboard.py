@@ -186,7 +186,7 @@ with tab1:
                 st.markdown(f"<div style='background:#141414;border-radius:12px;border:1px solid #2a2a2a;border-bottom:2px solid #ff6600;padding:20px 24px;'><div style='font-size:0.7rem;font-weight:500;color:#888888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;'>{_slbl}</div><div style='font-size:1.8rem;font-weight:600;color:#ffffff;line-height:1.2;'>{_sval}</div><div style='font-size:0.75rem;color:{_sdc};margin-top:6px;font-weight:500;'>{_sds}</div></div>", unsafe_allow_html=True)
 
         st.markdown('<p style="font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;color:#ff6600;text-transform:uppercase;letter-spacing:0.12em;margin:20px 0 12px 0;">S&P 500 — 2 Years</p>', unsafe_allow_html=True)
-        spx2 = spx.last("730D")
+        spx2 = spx.loc[spx.index >= spx.index[-1] - pd.Timedelta(days=730)]
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=spx2.index, y=spx2["Last"],
                                  mode="lines", name="SPX",
@@ -195,7 +195,7 @@ with tab1:
                           paper_bgcolor="#0a0a0a", height=400,
                           margin=dict(l=0, r=0, t=20, b=0),
                           xaxis=dict(showgrid=False), yaxis=dict(showgrid=False))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         # ── Regime Scores from Market Risk CSVs ──────────────────────────────
         st.markdown('<p style="font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;color:#ff6600;text-transform:uppercase;letter-spacing:0.12em;margin:20px 0 12px 0;">Regime Scores</p>', unsafe_allow_html=True)

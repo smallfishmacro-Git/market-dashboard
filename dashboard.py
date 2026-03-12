@@ -195,7 +195,7 @@ with tab1:
                           paper_bgcolor="#0a0a0a", height=400,
                           margin=dict(l=0, r=0, t=20, b=0),
                           xaxis=dict(showgrid=False), yaxis=dict(showgrid=False))
-        st.plotly_chart(fig, width='stretch')
+        st.plotly_chart(fig, use_container_width=True)
 
         # ── Regime Scores from Market Risk CSVs ──────────────────────────────
         st.markdown('<p style="font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;color:#ff6600;text-transform:uppercase;letter-spacing:0.12em;margin:20px 0 12px 0;">Regime Scores</p>', unsafe_allow_html=True)

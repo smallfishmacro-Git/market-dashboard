@@ -947,7 +947,7 @@ def render():
     #  SECTION 1 — Long Term Trend Composite
     # ════════════════════════════════════════════════════════════════════════════
     st.markdown('<p style="font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;color:#ff6600;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 12px 0;">Long Term Composite</p>', unsafe_allow_html=True)
-    st.plotly_chart(_chart_lt(df_lt), width='stretch')
+    st.plotly_chart(_chart_lt(df_lt), use_container_width=True)
 
     # LT info cards
     lt_ind_cols   = [c for c in df_lt.columns if c not in ("S&P500", "Composite", "Trend")]
@@ -981,7 +981,7 @@ def render():
     #  SECTION 2 — Trend Health Model
     # ════════════════════════════════════════════════════════════════════════════
     st.markdown('<p style="font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;color:#ff6600;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 12px 0;">Trend Health Model</p>', unsafe_allow_html=True)
-    st.plotly_chart(_chart_thm(df_thm), width='stretch')
+    st.plotly_chart(_chart_thm(df_thm), use_container_width=True)
 
     # THM info cards
     thm_comp       = df_thm["Trend_Composite"].dropna().iloc[-1]
@@ -1018,7 +1018,7 @@ def render():
             fig, err = _ind_chart(title, ind_df, col, spx_s,
                                    None, ind_name, ind_col, label, start_date=start)
             if fig:
-                st.plotly_chart(fig, width='stretch')
+                st.plotly_chart(fig, use_container_width=True)
             else:
                 st.warning(f"Chart unavailable: {err}")
     for title, col, ind_col, label, start in [
@@ -1042,6 +1042,6 @@ def render():
             fig, err = _ind_chart(title, ind_df, col, spx_s,
                                    None, "", ind_col, label, start_date=start)
             if fig:
-                st.plotly_chart(fig, width='stretch')
+                st.plotly_chart(fig, use_container_width=True)
             else:
                 st.warning(f"Chart unavailable: {err}")

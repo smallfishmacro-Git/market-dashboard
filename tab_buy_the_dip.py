@@ -138,15 +138,25 @@ def dual_chart(title, spx, indicator, indicator_name,
             row=2, col=1
         )
 
-    layout = pro_layout(height=520)
-    # Add second xaxis rangebreak for lower panel
-    layout["xaxis2"] = dict(
-        showgrid=False, zeroline=False,
-        tickfont=dict(color=DIM),
-        linecolor=BORDER,
-        rangebreaks=[dict(bounds=["sat", "mon"])],
+    # Build base layout WITHOUT xaxis entries — apply those per-row below
+    base_layout = dict(
+        plot_bgcolor=BG_PLOT, paper_bgcolor=BG, height=520,
+        margin=dict(l=60, r=40, t=45, b=40),
+        font=dict(color=WHITE, family="Inter, Arial, sans-serif"),
+        legend=dict(orientation="h", x=0.01, y=0.99,
+                    bgcolor="rgba(0,0,0,0)",
+                    font=dict(color="#cccccc", size=11)),
     )
-    fig.update_layout(title=dict(text=title, font=dict(color=WHITE, size=13)), **layout)
+    fig.update_layout(title=dict(text=title, font=dict(color=WHITE, size=13)), **base_layout)
+
+    # Apply x-axis style per row — matches the _chart_lt approach in tab_market_risk.py
+    # This avoids setting rangebreaks on the 'matches' axis (xaxis), which can cause
+    # Plotly.js to miscompute the visible range when xaxis.matches='x2'.
+    _xax = dict(showgrid=False, zeroline=False,
+                tickfont=dict(color=DIM), linecolor=BORDER,
+                rangebreaks=[dict(bounds=["sat", "mon"])])
+    fig.update_xaxes(**_xax, row=1, col=1)
+    fig.update_xaxes(**_xax, row=2, col=1)
 
     fig.update_yaxes(title_text="S&P 500", **yax(WHITE, log=spx_log, grid=True), row=1, col=1)
     fig.update_yaxes(title_text=indicator_name, **yax(ind_color), row=2, col=1)
@@ -453,7 +463,7 @@ def render():
         with st.spinner("Building composite signal (first load only — cached after this)..."):
             st.session_state.btd_composite = build_composite()
     df_comp = st.session_state.btd_composite
-    st.plotly_chart(chart_composite(df_comp), width='stretch')
+    st.plotly_chart(chart_composite(df_comp), use_container_width=True)
 
     latest = int(df_comp["Composite"].iloc[-1])
     col1, col2, col3 = st.columns(3)
@@ -481,6 +491,6 @@ def render():
     for title, fn in charts:
         with st.expander(title, expanded=False):
             try:
-                st.plotly_chart(fn(), width='stretch')
+                st.plotly_chart(fn(), use_container_width=True)
             except Exception as e:
                 st.error(f"Could not render chart: {e}")

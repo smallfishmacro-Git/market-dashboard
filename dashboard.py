@@ -185,16 +185,35 @@ with tab1:
             with _scol:
                 st.markdown(f"<div style='background:#141414;border-radius:12px;border:1px solid #2a2a2a;border-bottom:2px solid #ff6600;padding:20px 24px;'><div style='font-size:0.7rem;font-weight:500;color:#888888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;'>{_slbl}</div><div style='font-size:1.8rem;font-weight:600;color:#ffffff;line-height:1.2;'>{_sval}</div><div style='font-size:0.75rem;color:{_sdc};margin-top:6px;font-weight:500;'>{_sds}</div></div>", unsafe_allow_html=True)
 
-        st.markdown('<p style="font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;color:#ff6600;text-transform:uppercase;letter-spacing:0.12em;margin:20px 0 12px 0;">S&P 500 — 2 Years</p>', unsafe_allow_html=True)
-        spx2 = spx.loc[spx.index >= spx.index[-1] - pd.Timedelta(days=730)]
+        _TF_OPTS = ["1M", "3M", "6M", "YTD", "1Y", "2Y", "5Y", "10Y", "ALL"]
+        _hdr_c, _ctrl_c = st.columns([2, 3])
+        with _hdr_c:
+            st.markdown('<p style="font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;color:#ff6600;text-transform:uppercase;letter-spacing:0.12em;margin:20px 0 12px 0;">S&amp;P 500</p>', unsafe_allow_html=True)
+        with _ctrl_c:
+            _tf_spx = st.segmented_control(
+                "Timeframe", _TF_OPTS, default="2Y",
+                key="tf_overview_spx", label_visibility="collapsed")
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=spx2.index, y=spx2["Last"],
+        fig.add_trace(go.Scatter(x=spx.index, y=spx["Last"],
                                  mode="lines", name="SPX",
                                  line=dict(color="#ff6600", width=2)))
         fig.update_layout(template="plotly_dark", plot_bgcolor="#0a0a0a",
                           paper_bgcolor="#0a0a0a", height=400,
                           margin=dict(l=0, r=0, t=20, b=0),
                           xaxis=dict(showgrid=False), yaxis=dict(showgrid=False))
+        if _tf_spx and _tf_spx != "ALL":
+            _today = pd.Timestamp.now().normalize()
+            _cutoff = {"1M":  _today - pd.DateOffset(months=1),
+                       "3M":  _today - pd.DateOffset(months=3),
+                       "6M":  _today - pd.DateOffset(months=6),
+                       "YTD": pd.Timestamp(_today.year, 1, 1),
+                       "1Y":  _today - pd.DateOffset(years=1),
+                       "2Y":  _today - pd.DateOffset(years=2),
+                       "5Y":  _today - pd.DateOffset(years=5),
+                       "10Y": _today - pd.DateOffset(years=10)}.get(_tf_spx)
+            if _cutoff is not None:
+                fig.update_xaxes(range=[_cutoff.strftime("%Y-%m-%d"),
+                                        _today.strftime("%Y-%m-%d")])
         st.plotly_chart(fig, width='stretch')
 
         # ── Regime Scores from Market Risk CSVs ──────────────────────────────

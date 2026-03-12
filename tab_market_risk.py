@@ -101,6 +101,40 @@ def _read_cache(path, file_mtime=None):   # file_mtime busts cache when CSV chan
     df.index = pd.to_datetime(df.index, errors="coerce")
     return df[df.index.notna()].sort_index()
 
+# ── Timeframe selector helpers ─────────────────────────────────────────────────
+_TF_OPTIONS = ["1M", "3M", "6M", "YTD", "1Y", "2Y", "5Y", "10Y", "ALL"]
+
+def _tf_cutoff(tf):
+    today = pd.Timestamp.now().normalize()
+    return {"1M":  today - pd.DateOffset(months=1),
+            "3M":  today - pd.DateOffset(months=3),
+            "6M":  today - pd.DateOffset(months=6),
+            "YTD": pd.Timestamp(today.year, 1, 1),
+            "1Y":  today - pd.DateOffset(years=1),
+            "2Y":  today - pd.DateOffset(years=2),
+            "5Y":  today - pd.DateOffset(years=5),
+            "10Y": today - pd.DateOffset(years=10),
+            "ALL": None}.get(tf)
+
+def _tf_widget(key, default="2Y"):
+    _, ctrl = st.columns([2, 3])
+    with ctrl:
+        return st.segmented_control(
+            "Timeframe", _TF_OPTIONS,
+            default=default, key=key,
+            label_visibility="collapsed")
+
+def _apply_tf(fig, tf):
+    if tf == "ALL" or tf is None:
+        return fig
+    cutoff = _tf_cutoff(tf)
+    if cutoff is None:
+        return fig
+    today_str = pd.Timestamp.now().normalize().strftime("%Y-%m-%d")
+    fig.update_xaxes(range=[cutoff.strftime("%Y-%m-%d"), today_str])
+    return fig
+
+
 # ── Stats ─────────────────────────────────────────────────────────────────────
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -947,7 +981,8 @@ def render():
     #  SECTION 1 — Long Term Trend Composite
     # ════════════════════════════════════════════════════════════════════════════
     st.markdown('<p style="font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;color:#ff6600;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 12px 0;">Long Term Composite</p>', unsafe_allow_html=True)
-    st.plotly_chart(_chart_lt(df_lt), width='stretch')
+    tf_lt = _tf_widget("tf_mr_lt", "ALL")
+    st.plotly_chart(_apply_tf(_chart_lt(df_lt), tf_lt), width='stretch')
 
     # LT info cards
     lt_ind_cols   = [c for c in df_lt.columns if c not in ("S&P500", "Composite", "Trend")]
@@ -981,7 +1016,8 @@ def render():
     #  SECTION 2 — Trend Health Model
     # ════════════════════════════════════════════════════════════════════════════
     st.markdown('<p style="font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;color:#ff6600;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 12px 0;">Trend Health Model</p>', unsafe_allow_html=True)
-    st.plotly_chart(_chart_thm(df_thm), width='stretch')
+    tf_thm = _tf_widget("tf_mr_thm", "ALL")
+    st.plotly_chart(_apply_tf(_chart_thm(df_thm), tf_thm), width='stretch')
 
     # THM info cards
     thm_comp       = df_thm["Trend_Composite"].dropna().iloc[-1]
@@ -1009,19 +1045,20 @@ def render():
     #  INDIVIDUAL INDICATORS
     # ════════════════════════════════════════════════════════════════════════════
     st.markdown('<p style="font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;color:#ff6600;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 12px 0;">Individual Indicators</p>', unsafe_allow_html=True)
-    for title, col, ind_name, ind_col, label, start in [
+    for _i, (title, col, ind_name, ind_col, label, start) in enumerate([
         ("1. OECD CLI Diffusion Index",    "OECD_CLI",       "", "#f9ca24", "OECD CLI Strategy",     "1997-01-01"),
         ("2. Nasdaq 100 Cumulative Hi-Lo", "N100_HiLo",      "", "#4ecdc4", "N100 Hi-Lo Strategy",   "1999-01-01"),
         ("3. Credit Spreads (FRED)",       "Credit_Spreads", "", "#ff6b6b", "Credit Spread Strategy", "1997-01-01"),
-    ]:
+    ]):
         with st.expander(title, expanded=False):
+            tf = _tf_widget(f"tf_mr_lt_ind_{_i}", "2Y")
             fig, err = _ind_chart(title, ind_df, col, spx_s,
                                    None, ind_name, ind_col, label, start_date=start)
             if fig:
-                st.plotly_chart(fig, width='stretch')
+                st.plotly_chart(_apply_tf(fig, tf), width='stretch')
             else:
                 st.warning(f"Chart unavailable: {err}")
-    for title, col, ind_col, label, start in [
+    for _i, (title, col, ind_col, label, start) in enumerate([
         ("4.  Volatility Regime (MOVE/VIX)",       "Vol_Regime", ORANGE,    "Vol Regime",        "2008-01-01"),
         ("5.  NYSE 52-Week Hi-Lo Trend",            "HiLo_52W",  "#f9ca24", "Hi-Lo Strategy",    "1990-01-01"),
         ("6.  Canary Model",                        "Canary",    "#4ecdc4", "Canary Strategy",   "2003-01-01"),
@@ -1037,11 +1074,12 @@ def render():
         ("16. SuperTrend Medium Term (ATR 63×9)",   "ST_MT",     LIME,      "ST MT Strategy",    "1990-01-01"),
         ("17. SuperTrend Short Term (ATR 63×5)",    "ST_ST",     LIME,      "ST ST Strategy",    "1990-01-01"),
         ("18. VIX Term Structure × HMM",            "VIX_HMM",   "#ff6b6b", "VIX×HMM Strategy",  "2007-01-01"),
-    ]:
+    ]):
         with st.expander(title, expanded=False):
+            tf = _tf_widget(f"tf_mr_thm_ind_{_i}", "2Y")
             fig, err = _ind_chart(title, ind_df, col, spx_s,
                                    None, "", ind_col, label, start_date=start)
             if fig:
-                st.plotly_chart(fig, width='stretch')
+                st.plotly_chart(_apply_tf(fig, tf), width='stretch')
             else:
                 st.warning(f"Chart unavailable: {err}")

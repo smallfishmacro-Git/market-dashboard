@@ -82,6 +82,40 @@ def yax(color=WHITE, log=False, grid=False):
         type="log" if log else "linear",
     )
 
+# ── Timeframe selector helpers ─────────────────────────────────────────────────
+_TF_OPTIONS = ["1M", "3M", "6M", "YTD", "1Y", "2Y", "5Y", "10Y", "ALL"]
+
+def _tf_cutoff(tf):
+    today = pd.Timestamp.now().normalize()
+    return {"1M":  today - pd.DateOffset(months=1),
+            "3M":  today - pd.DateOffset(months=3),
+            "6M":  today - pd.DateOffset(months=6),
+            "YTD": pd.Timestamp(today.year, 1, 1),
+            "1Y":  today - pd.DateOffset(years=1),
+            "2Y":  today - pd.DateOffset(years=2),
+            "5Y":  today - pd.DateOffset(years=5),
+            "10Y": today - pd.DateOffset(years=10),
+            "ALL": None}.get(tf)
+
+def _tf_widget(key, default="2Y"):
+    _, ctrl = st.columns([2, 3])
+    with ctrl:
+        return st.segmented_control(
+            "Timeframe", _TF_OPTIONS,
+            default=default, key=key,
+            label_visibility="collapsed")
+
+def _apply_tf(fig, tf):
+    if tf == "ALL" or tf is None:
+        return fig
+    cutoff = _tf_cutoff(tf)
+    if cutoff is None:
+        return fig
+    today_str = pd.Timestamp.now().normalize().strftime("%Y-%m-%d")
+    fig.update_xaxes(range=[cutoff.strftime("%Y-%m-%d"), today_str])
+    return fig
+
+
 # ── Helpers ──────────────────────────────────────────────────────────────────────
 @st.cache_data(ttl=3600)
 def load_bc(filename):
@@ -214,11 +248,6 @@ def chart_2_acwi(spx):
     fig = dual_chart("S&P 500 vs ACWI ETF Oscillator (% Above 10-Day MA)",
                      spx_a["Last"], oscillator, "ACWI Oscillator (%)",
                      signal_dates=signals)
-    # Pin x-axis to last 2 years so recent data is always visible
-    x_end   = oscillator.index[-1]
-    x_start = x_end - pd.DateOffset(years=2)
-    fig.update_xaxes(range=[x_start.strftime("%Y-%m-%d"),
-                             x_end.strftime("%Y-%m-%d")])
     return fig
 
 
@@ -469,7 +498,8 @@ def render():
         with st.spinner("Building composite signal (first load only — cached after this)..."):
             st.session_state.btd_composite = build_composite()
     df_comp = st.session_state.btd_composite
-    st.plotly_chart(chart_composite(df_comp), width='stretch')
+    tf_comp = _tf_widget("tf_btd_composite", "ALL")
+    st.plotly_chart(_apply_tf(chart_composite(df_comp), tf_comp), width='stretch')
 
     latest = int(df_comp["Composite"].iloc[-1])
     col1, col2, col3 = st.columns(3)
@@ -494,9 +524,10 @@ def render():
         ("8. Volatility Curve (VXV/VIX)",           lambda: chart_8_volcurve(spx)),
         ("9. S&P 500 52-Week New Highs",            lambda: chart_9_52wh(spx)),
     ]
-    for title, fn in charts:
+    for i, (title, fn) in enumerate(charts):
         with st.expander(title, expanded=False):
+            tf = _tf_widget(f"tf_btd_{i + 1}", "2Y")
             try:
-                st.plotly_chart(fn(), width='stretch')
+                st.plotly_chart(_apply_tf(fn(), tf), width='stretch')
             except Exception as e:
                 st.error(f"Could not render chart: {e}")

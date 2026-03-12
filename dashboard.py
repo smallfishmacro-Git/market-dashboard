@@ -143,6 +143,7 @@ if st.button("↻  Refresh", type="primary"):
     st.success(f"{success} files updated, {failed} skipped.")
     with st.expander("View update log"):
         st.code("\n".join(log_lines))
+    st.session_state.pop("btd_composite", None)
     st.cache_data.clear()
     st.rerun()
 

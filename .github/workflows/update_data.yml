@@ -2,12 +2,15 @@ name: Daily Data Update
 
 on:
   schedule:
-    - cron: "0 7 * * 1-5"    # 8:00 AM CET (GMT+1) — morning data pull
-    - cron: "15 14 * * 1-5"  # 3:15 PM CET (GMT+1) — afternoon data pull
+    # All times in UTC — Geneva is CET (UTC+1) winter / CEST (UTC+2) summer
+    # During CEST (late Mar–late Oct) these run 1h later Geneva time
+    - cron: "0 5 * * 1-5"     # 06:00 Geneva CET  — pre-market
+    - cron: "20 14 * * 1-5"   # 15:20 Geneva CET  — mid-afternoon (US open settled)
+    - cron: "30 21 * * 1-5"   # 22:30 Geneva CET  — post US close
   workflow_dispatch:   # allow manual trigger from GitHub UI
 
 permissions:
-  contents: write      # needed to push updated CSVs back to repo
+  contents: write      # needed to push updated CSVs + JSON back to repo
 
 jobs:
   update:
@@ -29,10 +32,13 @@ jobs:
       - name: Run data updater
         run: python data_updater.py
 
-      - name: Commit and push updated CSVs
+      - name: Compute BTD indicators JSON for Vercel app
+        run: python compute_btd_json.py
+
+      - name: Commit and push updated data
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/barchart/*.csv data/datasets/*.csv
-          git diff --staged --quiet || git commit -m "chore: daily data update $(date -u +%Y-%m-%d)"
+          git add data/barchart/*.csv data/datasets/*.csv data/datasets/*.json
+          git diff --staged --quiet || git commit -m "chore: data update $(date -u +%Y-%m-%d_%H:%M)"
           git push

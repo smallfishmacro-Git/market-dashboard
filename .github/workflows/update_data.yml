@@ -35,6 +35,9 @@ jobs:
       - name: Compute BTD indicators JSON for Vercel app
         run: python compute_btd_json.py
 
+      - name: Compute Market Risk JSON for Vercel app
+        run: python compute_market_risk_json.py
+
       - name: Commit and push updated data
         run: |
           git config user.name  "github-actions[bot]"

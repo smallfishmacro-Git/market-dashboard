@@ -288,7 +288,6 @@ def _compute_acwi_200sma(log=print):
                 "startDt": "1999-01-01",
                 "endDt": datetime.now().strftime("%Y-%m-%d"),
                 "frequency": "Every Day",
-                "type": "etf",
             }, to_pandas=True)
 
             # result is a DataFrame with MultiIndex (date, ticker) and column "Close(0)"

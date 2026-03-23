@@ -256,17 +256,72 @@ def _compute_pct_above_200():
     return df
 
 def _compute_acwi_200sma(log=print):
-    import yfinance as yf
+    """
+    Fetch ACWI country ETF close prices from Portfolio123 API,
+    compute % above 10-day MA (for BTD) and % above 200-day SMA (for Market Risk).
+    Falls back to yfinance if P123 is unavailable.
+    Start date: 1999-01-01 (P123 path) or 2007-01-01 (yfinance fallback).
+    """
     path = os.path.join(DATASETS, "acwi_oscillator.csv")
-    log("  Downloading ACWI 200 SMA (46 ETFs)...")
+
     etfs = ["EWA","EWO","EWK","EWC","EDEN","EFNL","EWQ","EWG","EWH","EIRL",
             "EIS","EWI","EWJ","EWN","ENZL","NORW","PGAL","EWS","EWP","EWD",
             "EWL","EWU","SPY","EWZ","ECH","MCHI","GXG","CEZ","EGPT","GREK",
             "INDA","EIDO","EWY","KWT","EWM","EWW","EPU","EPHE","EPOL","QAT",
             "KSA","EZA","EWT","THD","TUR","UAE"]
-    data   = yf.download(etfs, start="2007-01-01", progress=False, timeout=30)
-    prices = (data["Close"] if not isinstance(data.columns, pd.MultiIndex)
-              else data.xs("Close", axis=1, level=0))
+
+    prices = None
+
+    # ── Try Portfolio123 API first ────────────────────────────────────────────
+    p123_id  = os.environ.get("P123_API_ID")
+    p123_key = os.environ.get("P123_API_KEY")
+
+    if p123_id and p123_key:
+        try:
+            import p123api
+            log("  Downloading ACWI via Portfolio123 API (46 ETFs from 1999)...")
+            client = p123api.Client(api_id=p123_id, api_key=p123_key)
+
+            result = client.data({
+                "tickers": etfs,
+                "formulas": ["Close(0)"],
+                "startDt": "1999-01-01",
+                "endDt": datetime.now().strftime("%Y-%m-%d"),
+                "frequency": "Every Day",
+                "type": "etf",
+            }, to_pandas=True)
+
+            # result is a DataFrame with MultiIndex (date, ticker) and column "Close(0)"
+            # Pivot to get dates as rows and tickers as columns
+            if result is not None and len(result) > 0:
+                # Handle p123api response format:
+                # Columns: ['dt', 'ticker', 'Close(0)'] or similar
+                if isinstance(result.index, pd.MultiIndex):
+                    prices = result["Close(0)"].unstack(level="ticker")
+                elif "ticker" in result.columns and "dt" in result.columns:
+                    prices = result.pivot(index="dt", columns="ticker", values="Close(0)")
+                elif "ticker" in result.columns:
+                    prices = result.pivot(columns="ticker", values="Close(0)")
+                else:
+                    # Flat DataFrame — try to reshape
+                    prices = result
+
+                prices.index = pd.to_datetime(prices.index)
+                prices = prices.sort_index()
+                log(f"  P123: got {len(prices)} rows, {prices.shape[1]} ETFs, from {prices.index[0].date()} to {prices.index[-1].date()}")
+        except Exception as e:
+            log(f"  ⚠️  Portfolio123 failed: {e}, falling back to yfinance")
+            prices = None
+
+    # ── Fallback to yfinance ──────────────────────────────────────────────────
+    if prices is None or len(prices) == 0:
+        import yfinance as yf
+        log("  Downloading ACWI via yfinance (46 ETFs from 2007)...")
+        data   = yf.download(etfs, start="2007-01-01", progress=False, timeout=30)
+        prices = (data["Close"] if not isinstance(data.columns, pd.MultiIndex)
+                  else data.xs("Close", axis=1, level=0))
+
+    # ── Compute oscillators ───────────────────────────────────────────────────
     valid  = prices.notna().sum(axis=1)
 
     # 10-day MA — for BTD oscillator (acwi_oscillator.csv, signals when 0%)
@@ -278,7 +333,7 @@ def _compute_acwi_200sma(log=print):
     osc200 = ((prices > sma200).sum(axis=1) / valid * 100).dropna()
 
     if len(osc10) == 0:
-        log("  ACWI: no data returned (SSL/network issue), keeping existing CSV")
+        log("  ACWI: no data returned, keeping existing CSV")
         return None  # baseline in compute_and_save_all preserves existing ACWI_200
     # Save 10-day MA oscillator to acwi_oscillator.csv (BTD tab reads "Percentage")
     pd.DataFrame({"Percentage": osc10}).to_csv(path)

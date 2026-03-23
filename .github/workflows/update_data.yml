@@ -30,6 +30,9 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run data updater
+        env:
+          P123_API_ID: ${{ secrets.P123_API_ID }}
+          P123_API_KEY: ${{ secrets.P123_API_KEY }}
         run: python data_updater.py
 
       - name: Compute BTD indicators JSON for Vercel app

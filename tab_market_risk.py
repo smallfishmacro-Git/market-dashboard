@@ -266,7 +266,7 @@ def _compute_acwi_200sma(log=print):
 
     etfs = ["EWA","EWO","EWK","EWC","EDEN","EFNL","EWQ","EWG","EWH","EIRL",
             "EIS","EWI","EWJ","EWN","ENZL","NORW","EWS","EWP","EWD",
-            "EWL","EWU","SPY","EWZ","ECH","MCHI","COLO","CZX","GREK",
+            "EWL","EWU","SPY","EWZ","ECH","MCHI","COLO","GREK",
             "INDA","EIDO","EWY","KWT","EWM","EWW","EPU","EPHE","EPOL","QAT",
             "KSA","EZA","EWT","THD","TUR","UAE"]
 

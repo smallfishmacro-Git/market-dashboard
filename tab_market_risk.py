@@ -279,7 +279,7 @@ def _compute_acwi_200sma(log=print):
     if p123_id and p123_key:
         try:
             import p123api
-            log("  Downloading ACWI via Portfolio123 API (46 ETFs from 1999)...")
+            log("  Downloading ACWI via Portfolio123 API (43 ETFs from 1999)...")
             client = p123api.Client(api_id=p123_id, api_key=p123_key)
 
             result = client.data({
@@ -287,7 +287,6 @@ def _compute_acwi_200sma(log=print):
                 "formulas": ["Close(0)"],
                 "startDt": "1999-01-01",
                 "endDt": datetime.now().strftime("%Y-%m-%d"),
-                "frequency": "Every Day",
             }, to_pandas=True)
 
             # result is a DataFrame with MultiIndex (date, ticker) and column "Close(0)"
@@ -315,7 +314,7 @@ def _compute_acwi_200sma(log=print):
     # ── Fallback to yfinance ──────────────────────────────────────────────────
     if prices is None or len(prices) == 0:
         import yfinance as yf
-        log("  Downloading ACWI via yfinance (46 ETFs from 2007)...")
+        log("  Downloading ACWI via yfinance (43 ETFs from 2007)...")
         data   = yf.download(etfs, start="2007-01-01", progress=False, timeout=30)
         prices = (data["Close"] if not isinstance(data.columns, pd.MultiIndex)
                   else data.xs("Close", axis=1, level=0))

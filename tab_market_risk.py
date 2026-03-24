@@ -315,7 +315,7 @@ def _compute_acwi_200sma(log=print):
     if prices is None or len(prices) == 0:
         import yfinance as yf
         log("  Downloading ACWI via yfinance (43 ETFs from 2007)...")
-        data   = yf.download(etfs, start="2007-01-01", progress=False, timeout=30)
+        data   = yf.download(etfs, start="1999-01-01", progress=False, timeout=30)
         prices = (data["Close"] if not isinstance(data.columns, pd.MultiIndex)
                   else data.xs("Close", axis=1, level=0))
 

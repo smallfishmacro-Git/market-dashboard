@@ -265,8 +265,8 @@ def _compute_acwi_200sma(log=print):
     path = os.path.join(DATASETS, "acwi_oscillator.csv")
 
     etfs = ["EWA","EWO","EWK","EWC","EDEN","EFNL","EWQ","EWG","EWH","EIRL",
-            "EIS","EWI","EWJ","EWN","ENZL","NORW","PGAL","EWS","EWP","EWD",
-            "EWL","EWU","SPY","EWZ","ECH","MCHI","GXG","CEZ","EGPT","GREK",
+            "EIS","EWI","EWJ","EWN","ENZL","NORW","EWS","EWP","EWD",
+            "EWL","EWU","SPY","EWZ","ECH","MCHI","COLO","CZX","GREK",
             "INDA","EIDO","EWY","KWT","EWM","EWW","EPU","EPHE","EPOL","QAT",
             "KSA","EZA","EWT","THD","TUR","UAE"]
 

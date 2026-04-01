@@ -152,6 +152,14 @@ def update_symbol(symbol, filename, session, log_fn=print):
                 df1[col] = df1[col].str.replace(",", "", regex=False).str.strip()
             df1[col] = pd.to_numeric(df1[col], errors="coerce")
 
+    # Drop rows where ALL OHLC values are missing (Barchart bug workaround)
+    ohlc_check = [c for c in ['Open','High','Low','Last'] if c in df1.columns]
+    if ohlc_check:
+        before = len(df1)
+        df1 = df1.dropna(subset=ohlc_check, how='all')
+        if len(df1) < before:
+            log_fn(f'  ?? {symbol}: dropped {before - len(df1)} rows with empty OHLC')
+
     # Step 4: Append only new rows
     new_data = df1.loc[df.index[-1] + timedelta(days=1):]
     df = pd.concat([df, new_data])

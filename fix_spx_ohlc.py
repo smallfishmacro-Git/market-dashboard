@@ -1,164 +1,102 @@
 """
-fix_spx_ohlc.py
----------------
-Repairs S&P_500_Index_$SPX.csv rows where Barchart returned empty OHLC fields.
-Uses yfinance (^GSPC) as the authoritative fallback for price data.
-
-Usage:
-    python fix_spx_ohlc.py          # one-time repair + ongoing fallback
-    Called automatically by GitHub Actions after data_updater.py runs.
+fix_spx_ohlc.py - Repairs SPX CSV: fixes empty OHLC rows AND adds missing trading days.
+Uses yfinance (^GSPC) as fallback. Runs after data_updater.py in GitHub Actions.
 """
-
-import os
-import sys
-import io
-import pandas as pd
-import yfinance as yf
+import os, sys, io, pandas as pd, yfinance as yf
 from datetime import datetime, timedelta
 
-# ── Fix Windows console encoding ───────────────────────────────────────────────
-if isinstance(sys.stdout, io.TextIOWrapper) and sys.stdout.encoding.lower() not in ("utf-8", "utf_8"):
+if isinstance(sys.stdout, io.TextIOWrapper) and sys.stdout.encoding.lower() not in ("utf-8","utf_8"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SPX_PATH = os.path.join(BASE_DIR, "data", "barchart", "S&P_500_Index_$SPX.csv")
 
-
 def fix_spx_ohlc(log_fn=print):
-    """
-    Scan $SPX CSV for rows with missing OHLC data.
-    Fill them from yfinance ^GSPC.
-    Also recalculate Change / Change% if missing.
-    """
     if not os.path.exists(SPX_PATH):
-        log_fn(f"  ⚠️ SPX CSV not found at {SPX_PATH}")
-        return False
-
-    # Load existing CSV
+        log_fn(f"  Warning: SPX CSV not found at {SPX_PATH}"); return False
     df = pd.read_csv(SPX_PATH, parse_dates=True, index_col=0, date_format="%Y-%m-%d")
     df.index = pd.to_datetime(df.index, errors="coerce")
     df = df[df.index.notna()].sort_index()
-
-    # Coerce OHLC columns to numeric (handles commas, whitespace, empty strings)
-    ohlc_cols = ["Open", "High", "Low", "Last"]
+    ohlc_cols = ["Open","High","Low","Last"]
     for col in ohlc_cols:
         if col in df.columns:
-            df[col] = pd.to_numeric(
-                df[col].astype(str).str.replace(",", "").str.strip().replace("", pd.NA),
-                errors="coerce"
-            )
+            df[col] = pd.to_numeric(df[col].astype(str).str.replace(",","").str.strip().replace("",pd.NA), errors="coerce")
 
-    # Find rows where ALL four OHLC values are missing
+    # --- PART 1: Fix rows with empty OHLC ---
     mask = df[ohlc_cols].isna().all(axis=1)
     broken_dates = df.index[mask]
-
-    if broken_dates.empty:
-        log_fn("  ✅ SPX OHLC — no missing rows found, all good.")
-        return True
-
-    log_fn(f"  🔧 SPX OHLC — found {len(broken_dates)} rows with missing prices: "
-           f"{broken_dates[0].strftime('%Y-%m-%d')} to {broken_dates[-1].strftime('%Y-%m-%d')}")
-
-    # Fetch yfinance data covering the broken range (with buffer)
-    start = (broken_dates[0] - timedelta(days=5)).strftime("%Y-%m-%d")
-    end = (broken_dates[-1] + timedelta(days=2)).strftime("%Y-%m-%d")
-
-    log_fn(f"  📡 Fetching ^GSPC from yfinance ({start} to {end})...")
-    yf_df = yf.download("^GSPC", start=start, end=end, progress=False, timeout=30)
-
-    if yf_df.empty:
-        log_fn("  ❌ yfinance returned no data for ^GSPC — cannot repair.")
-        return False
-
-    # Flatten multi-level columns if present (yfinance sometimes returns MultiIndex)
-    if isinstance(yf_df.columns, pd.MultiIndex):
-        yf_df.columns = yf_df.columns.get_level_values(0)
-
-    yf_df.index = pd.to_datetime(yf_df.index)
-
     repaired = 0
-    for date in broken_dates:
-        if date in yf_df.index:
-            row = yf_df.loc[date]
-            df.at[date, "Open"]  = round(float(row["Open"]), 2)
-            df.at[date, "High"]  = round(float(row["High"]), 2)
-            df.at[date, "Low"]   = round(float(row["Low"]), 2)
-            df.at[date, "Last"]  = round(float(row["Close"]), 2)
 
-            # Recalculate Change and Change% from previous row
-            prev_idx = df.index.get_loc(date)
-            if prev_idx > 0:
-                prev_close = df.iloc[prev_idx - 1]["Last"]
-                if pd.notna(prev_close) and prev_close != 0:
-                    change = round(float(row["Close"]) - prev_close, 2)
-                    pct = round(change / prev_close * 100, 2)
-                    df.at[date, "Change"]   = change
-                    df.at[date, "Change%"]  = f"{pct}%"
+    if not broken_dates.empty:
+        log_fn(f"  Found {len(broken_dates)} rows with missing OHLC")
+        start = (broken_dates[0] - timedelta(days=5)).strftime("%Y-%m-%d")
+        end = (broken_dates[-1] + timedelta(days=2)).strftime("%Y-%m-%d")
+        yf_df = yf.download("^GSPC", start=start, end=end, progress=False, timeout=30)
+        if not yf_df.empty:
+            if isinstance(yf_df.columns, pd.MultiIndex):
+                yf_df.columns = yf_df.columns.get_level_values(0)
+            yf_df.index = pd.to_datetime(yf_df.index)
+            for date in broken_dates:
+                if date in yf_df.index:
+                    row = yf_df.loc[date]
+                    df.at[date,"Open"] = round(float(row["Open"]),2)
+                    df.at[date,"High"] = round(float(row["High"]),2)
+                    df.at[date,"Low"] = round(float(row["Low"]),2)
+                    df.at[date,"Last"] = round(float(row["Close"]),2)
+                    prev_idx = df.index.get_loc(date)
+                    if prev_idx > 0:
+                        prev_close = df.iloc[prev_idx-1]["Last"]
+                        if pd.notna(prev_close) and prev_close != 0:
+                            change = round(float(row["Close"]) - prev_close, 2)
+                            df.at[date,"Change"] = change
+                            df.at[date,"Change%"] = f"{round(change/prev_close*100,2)}%"
+                    vol = df.at[date,"Volume"] if "Volume" in df.columns else 0
+                    if pd.isna(vol) or vol == 0:
+                        df.at[date,"Volume"] = int(row.get("Volume",0))
+                    repaired += 1
+                    log_fn(f"    Fixed {date.strftime('%Y-%m-%d')}: O={df.at[date,'Open']:.2f} H={df.at[date,'High']:.2f} L={df.at[date,'Low']:.2f} C={df.at[date,'Last']:.2f}")
+                else:
+                    df = df.drop(date)
+                    log_fn(f"    {date.strftime('%Y-%m-%d')}: not a trading day - removed")
+                    repaired += 1
 
-            # Fill volume from yfinance if our volume is 0 or missing
-            vol = df.at[date, "Volume"] if "Volume" in df.columns else 0
-            if pd.isna(vol) or vol == 0:
-                df.at[date, "Volume"] = int(row.get("Volume", 0))
-
-            repaired += 1
-            log_fn(f"    ✓ {date.strftime('%Y-%m-%d')}: "
-                   f"O={df.at[date, 'Open']:.2f}  H={df.at[date, 'High']:.2f}  "
-                   f"L={df.at[date, 'Low']:.2f}  C={df.at[date, 'Last']:.2f}")
-        else:
-            # Date not in yfinance = likely not a trading day (weekend/holiday)
-            # Remove the row entirely — it shouldn't be in the CSV
-            df = df.drop(date)
-            log_fn(f"    ✗ {date.strftime('%Y-%m-%d')}: not a trading day — removed row")
-            repaired += 1
-
-    # ── Check for missing recent trading days ──────────────────────────────────
-    today = pd.Timestamp(datetime.now().date())
-    log_fn("  🔍 Checking for missing recent trading days...")
-    recent_yf = yf.download("^GSPC", period="10d", progress=False, timeout=30)
-    if not recent_yf.empty:
-        if isinstance(recent_yf.columns, pd.MultiIndex):
-            recent_yf.columns = recent_yf.columns.get_level_values(0)
-        recent_yf.index = pd.to_datetime(recent_yf.index)
-        # Exclude today (incomplete data)
-        recent_yf = recent_yf[recent_yf.index < today]
-        missing_dates = recent_yf.index.difference(df.index)
-        if not missing_dates.empty:
-            log_fn(f"  🔧 SPX OHLC — {len(missing_dates)} missing trading day(s) to add")
-            for date in missing_dates:
-                row = recent_yf.loc[date]
-                new_row = {
-                    "Open":  round(float(row["Open"]), 2),
-                    "High":  round(float(row["High"]), 2),
-                    "Low":   round(float(row["Low"]), 2),
-                    "Last":  round(float(row["Close"]), 2),
-                    "Volume": int(row.get("Volume", 0)),
-                }
-                df.loc[date] = new_row
-                # Recalculate Change / Change% after inserting
-                df = df.sort_index()
-                idx = df.index.get_loc(date)
-                if idx > 0:
-                    prev_close = df.iloc[idx - 1]["Last"]
+    # --- PART 2: Add missing recent trading days ---
+    log_fn("  Checking for missing recent trading days...")
+    fetch_start = (datetime.now() - timedelta(days=15)).strftime("%Y-%m-%d")
+    fetch_end = datetime.now().strftime("%Y-%m-%d")
+    yf_recent = yf.download("^GSPC", start=fetch_start, end=fetch_end, progress=False, timeout=30)
+    added = 0
+    if not yf_recent.empty:
+        if isinstance(yf_recent.columns, pd.MultiIndex):
+            yf_recent.columns = yf_recent.columns.get_level_values(0)
+        yf_recent.index = pd.to_datetime(yf_recent.index)
+        today = pd.Timestamp(datetime.now().date())
+        for date in yf_recent.index:
+            if date >= today:
+                continue
+            if date not in df.index:
+                row = yf_recent.loc[date]
+                close_val = round(float(row["Close"]),2)
+                new_row = {col: 0 for col in df.columns}
+                new_row["Open"] = round(float(row["Open"]),2)
+                new_row["High"] = round(float(row["High"]),2)
+                new_row["Low"] = round(float(row["Low"]),2)
+                new_row["Last"] = close_val
+                new_row["Volume"] = int(row.get("Volume",0))
+                prev_dates = df.index[df.index < date]
+                if len(prev_dates) > 0:
+                    prev_close = df.at[prev_dates[-1], "Last"]
                     if pd.notna(prev_close) and prev_close != 0:
-                        change = round(new_row["Last"] - prev_close, 2)
-                        pct = round(change / prev_close * 100, 2)
-                        df.at[date, "Change"]  = change
-                        df.at[date, "Change%"] = f"{pct}%"
-                log_fn(f"    + {date.strftime('%Y-%m-%d')}: "
-                       f"O={new_row['Open']:.2f}  H={new_row['High']:.2f}  "
-                       f"L={new_row['Low']:.2f}  C={new_row['Last']:.2f}")
-            repaired += len(missing_dates)
-        else:
-            log_fn("  ✅ SPX OHLC — no missing recent trading days.")
-    else:
-        log_fn("  ⚠️ yfinance returned no recent data — skipping missing-day check.")
-
-    # Save repaired CSV
+                        change = round(close_val - prev_close, 2)
+                        new_row["Change"] = change
+                        new_row["Change%"] = f"{round(change/prev_close*100,2)}%"
+                df.loc[date] = new_row
+                added += 1
+                log_fn(f"    Added {date.strftime('%Y-%m-%d')}: O={new_row['Open']:.2f} H={new_row['High']:.2f} L={new_row['Low']:.2f} C={new_row['Last']:.2f}")
     df = df.sort_index()
     df.to_csv(SPX_PATH)
-    log_fn(f"  ✅ SPX OHLC — repaired {repaired} rows, saved to CSV.")
+    log_fn(f"  SPX OHLC done - repaired {repaired}, added {added} missing days.")
     return True
-
 
 if __name__ == "__main__":
     print(f"[fix_spx_ohlc] Starting at {datetime.now().isoformat()}")

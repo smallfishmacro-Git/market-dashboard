@@ -29,14 +29,14 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Fix SPX OHLC (yfinance fallback)
+        run: python fix_spx_ohlc.py
+
       - name: Run data updater
         env:
           P123_API_ID: ${{ secrets.P123_API_ID }}
           P123_API_KEY: ${{ secrets.P123_API_KEY }}
         run: python data_updater.py
-
-      - name: Fix SPX OHLC (yfinance fallback)
-        run: python fix_spx_ohlc.py
 
       - name: Compute BTD indicators JSON for Vercel app
         run: python compute_btd_json.py

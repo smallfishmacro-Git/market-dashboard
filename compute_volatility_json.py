@@ -116,7 +116,7 @@ def compute_volatility_signals(log_fn=print):
         df["rule_on"] = ((raw_on == 1) & (raw_on.shift(1) == 1)).astype(int)
 
         # Part 3 equity curve
-        df["rule_ret"] = df["ret"] * df["rule_on"]
+        df["rule_ret"] = df["ret"] * df["rule_on"].shift(1)
         df["rule_cum"] = (1 + df["rule_ret"]).cumprod()
         df["spx_cum"]  = (1 + df["ret"]).cumprod()
 
@@ -168,7 +168,7 @@ def compute_volatility_signals(log_fn=print):
         df["ml_invested"] = 1 - df["ml_signal"]
 
         # ML equity curve
-        df["ml_ret"] = df["ret"] * df["ml_invested"]
+        df["ml_ret"] = df["ret"] * df["ml_invested"].shift(1)
         df["ml_cum"] = (1 + df["ml_ret"]).cumprod()
 
         # ── 5. Build transaction histories ─────────────────────────────

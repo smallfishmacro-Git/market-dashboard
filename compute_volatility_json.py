@@ -11,7 +11,7 @@ Or called from data_updater.py via compute_volatility_signals()
 
 Two strategies are computed:
   1. Part 3 Combined Rule (8 binary VIX signals, majority vote, 2-day persistence)
-  2. ML LogReg (Logistic Regression, ≥5% drawdown in 20d target, p≥0.40 threshold)
+  2. ML LogReg (Logistic Regression, ≥5% drawdown in 20d target, p≥0.50 threshold)
 
 The JSON contains everything the frontend needs to render:
   - Equity curves (strategy vs S&P500)
@@ -164,7 +164,7 @@ def compute_volatility_signals(log_fn=print):
                 ml_prob[i] = current_model.predict_proba(X_today_s)[:, 1][0]
 
         df["ml_prob"] = ml_prob
-        df["ml_signal"] = (df["ml_prob"] >= 0.40).astype(int)  # 1 = danger
+        df["ml_signal"] = (df["ml_prob"] >= 0.50).astype(int)  # 1 = danger
         df["ml_invested"] = 1 - df["ml_signal"]
 
         # ML equity curve
@@ -232,7 +232,7 @@ def compute_volatility_signals(log_fn=print):
                 "signal": "RISK-ON" if int(latest.get("ml_invested", 0)) == 1 else "RISK-OFF",
                 "signal_value": int(latest.get("ml_invested", 0)),
                 "probability": round(float(latest.get("ml_prob", 0)), 4),
-                "threshold": 0.40,
+                "threshold": 0.50,
                 "target": "≥5% drawdown in 20 trading days",
             },
         }
@@ -288,7 +288,7 @@ def compute_volatility_signals(log_fn=print):
 
         ml_valid = df["ml_cum"].dropna()
         ml_ret_valid = df["ml_ret"].loc[ml_valid.index]
-        perf_ml = calc_perf(ml_valid, ml_ret_valid, "ML LogReg (p≥0.40)")
+        perf_ml = calc_perf(ml_valid, ml_ret_valid, "ML LogReg (p≥0.50)")
 
         # ── 9. Assemble JSON ───────────────────────────────────────────
         output = {

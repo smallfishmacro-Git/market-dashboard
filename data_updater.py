@@ -82,6 +82,8 @@ SYMBOLS = [
     ("$S5TH",     "S&P_500_Stocks_Above_200-Day_Average_$S5TH.csv"),
     ("$SPX",      "S&P_500_Index_$SPX.csv"),
     ("ISMMFG.RT", "ISM_Manufacturing_Index.csv"),
+    ("VI*1",      "VIX_Front_Month_Futures_VI1.csv"),
+    ("VI*2",      "VIX_Second_Month_Futures_VI2.csv"),
 ]
 
 # ── Core Barchart update function ───────────────────────────────────────────────
@@ -171,6 +173,80 @@ def update_symbol(symbol, filename, session, log_fn=print):
     # Step 5: Save
     df.to_csv(file_path)
     log_fn(f"  ✅  {symbol:15s} — {len(new_data)} new row(s) added  →  {filename}")
+    return True
+
+
+def update_futures_symbol(symbol, filename, session, log_fn=print):
+    """Like update_symbol() but uses /futures/ URL path for Barchart futures."""
+    file_path = os.path.join(BARCHART, filename)
+    if not os.path.exists(file_path):
+        log_fn(f"  ⚠️ File not found, skipping: {filename}")
+        return False
+
+    df = pd.read_csv(file_path, parse_dates=True, index_col=0, date_format="%Y-%m-%d")
+    df.index = pd.to_datetime(df.index, errors="coerce")
+    df = df[df.index.notna()].sort_index()
+    if len(df) > 1:
+        df = df.iloc[:-1]
+
+    get_url = f"https://www.barchart.com/futures/quotes/{symbol}/price-history/"
+    get_headers = {
+        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+        "accept-encoding": "gzip, deflate, br",
+        "accept-language": "en-US,en;q=0.9",
+        "cache-control": "max-age=0",
+        "upgrade-insecure-requests": "1",
+        "referer": f"https://www.barchart.com/futures/quotes/{symbol}/price-history/historical",
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36",
+    }
+    session.get(get_url, headers=get_headers, timeout=15)
+
+    api_url = "https://www.barchart.com/proxies/core-api/v1/historical/get"
+    api_headers = {
+        "accept": "application/json",
+        "accept-encoding": "gzip, deflate, br",
+        "accept-language": "en-US,en;q=0.9",
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.85 Safari/537.36",
+        "x-xsrf-token": unquote(unquote(session.cookies.get_dict().get("XSRF-TOKEN", ""))),
+    }
+    payload = {
+        "symbol": symbol,
+        "fields": "tradeTime.format(m/d/Y),openPrice,highPrice,lowPrice,lastPrice,priceChange,percentChange,volume,openInterest",
+        "type": "eod",
+        "orderBy": "tradeTime",
+        "orderDir": "desc",
+        "limit": 65,
+        "raw": "1",
+    }
+    response = session.get(api_url, params=payload, headers=api_headers, timeout=15)
+    data = response.json()
+
+    if "data" not in data or not data["data"]:
+        log_fn(f"  ⚠️ No data returned for {symbol}")
+        return False
+
+    df1 = pd.DataFrame(data["data"])
+    df1.set_index(df1.iloc[:, 0].name, inplace=True)
+    df1.index.rename("Time", inplace=True)
+    df1.index = pd.to_datetime(df1.index, errors="coerce")
+    df1 = df1[df1.index.notna()].sort_index()
+    df1 = df1.iloc[:, :7]
+    df1.columns = df.columns
+
+    for col in ["Open", "High", "Low", "Last"]:
+        if col in df1.columns:
+            if df1[col].dtype == object:
+                df1[col] = df1[col].str.replace(",", "", regex=False).str.strip()
+            df1[col] = pd.to_numeric(df1[col], errors="coerce")
+
+    new_data = df1.loc[df.index[-1] + timedelta(days=1):]
+    df = pd.concat([df, new_data])
+
+    if df.index[-1].date() == datetime.today().date():
+        df = df.iloc[:-1]
+
+    df.to_csv(file_path)
+    log_fn(f"  ✅ {symbol:15s} — {len(new_data)} new row(s) added → {filename}")
     return True
 
 
@@ -658,6 +734,22 @@ def run_update(log_fn=print):
                 failed += 1
         except Exception as e:
             log_fn(f"  ❌  {symbol} — ERROR: {e}")
+            failed += 1
+
+    # VIX Futures
+    FUTURES_SYMBOLS = [
+        ("VI*1", "VIX_Front_Month_Futures_VI1.csv"),
+        ("VI*2", "VIX_Second_Month_Futures_VI2.csv"),
+    ]
+    for symbol, filename in FUTURES_SYMBOLS:
+        try:
+            ok = update_futures_symbol(symbol, filename, session, log_fn)
+            if ok:
+                success += 1
+            else:
+                failed += 1
+        except Exception as e:
+            log_fn(f"  ❌ {symbol} — ERROR: {e}")
             failed += 1
 
     # CNN Fear & Greed

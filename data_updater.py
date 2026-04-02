@@ -787,6 +787,18 @@ def run_update(log_fn=print):
         log_fn(f"  ❌  BTD signals — ERROR: {e}")
         failed += 1
 
+    # Volatility signals (Part 3 Rule + ML LogReg)
+    try:
+        from compute_volatility_json import compute_volatility_signals
+        ok = compute_volatility_signals(log_fn)
+        if ok:
+            success += 1
+        else:
+            failed += 1
+    except Exception as e:
+        log_fn(f"  ❌ Volatility signals — ERROR: {e}")
+        failed += 1
+
     # VIX_HMM signal
     try:
         ok = compute_vix_hmm(log_fn)

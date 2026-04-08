@@ -289,16 +289,14 @@ def compute_vix_hmm(log_fn=print):
     Computes the correct VIX_HMM overlay signal and updates VIX_HMM column in
     data/datasets/market_risk_indicators.csv.
 
+    Uses expanding-window quarterly-refit HMM (no lookahead bias).
+
     Logic (Overlay_LongIfBullElseVIXxBear):
       VIX_HMM = 1                          if HMM Bull
       VIX_HMM = VIXTrend * HMM_Bear        if HMM Bear
     """
     import numpy as np
-    try:
-        from hmmlearn.hmm import GaussianHMM
-    except ImportError:
-        log_fn("  ⚠️  hmmlearn not installed — skipping VIX_HMM update")
-        return False
+    from hmm_regime import fit_hmm_expanding
 
     def _load(filename):
         path = os.path.join(BARCHART, filename)
@@ -310,7 +308,7 @@ def compute_vix_hmm(log_fn=print):
         df["Last"] = pd.to_numeric(df["Last"].astype(str).str.replace(",", ""), errors="coerce")
         return df
 
-    log_fn("  Computing VIX_HMM signal (HMM training ~30s)...")
+    log_fn("  Computing VIX_HMM signal (expanding-window HMM)...")
     try:
         spx = _load("S&P_500_Index_$SPX.csv")
         vix = _load("CBOE_Volatility_Index_$VIX.csv")
@@ -327,27 +325,18 @@ def compute_vix_hmm(log_fn=print):
         vix_trend = (ema_fast < ema_slow).astype(int)
         vix_trend_signal = vix_trend.shift(1).fillna(0).astype(int)
 
-        # ── HMM Signal ───────────────────────────────────────────────────────
+        # ── HMM Signal (point-in-time, expanding-window quarterly refit) ─────
         spx_full = spx[spx.index >= "1960-01-01"]["Last"].dropna().sort_index()
         returns  = spx_full.pct_change().dropna()
 
-        # Train on 1960-01-01 to 2024-12-31
-        train_returns = returns[returns.index <= "2024-12-31"]
-        train_data    = train_returns.values.reshape(-1, 1)
+        # fit_hmm_expanding returns 1=bull, 0=bear, forward-filtered only
+        states_s = fit_hmm_expanding(returns, log_fn=log_fn)
+        if len(states_s) == 0:
+            log_fn("  ⚠️  VIX_HMM: HMM returned no labels, skipping.")
+            return False
 
-        hmm_model = GaussianHMM(n_components=2, covariance_type="full",
-                                n_iter=300, random_state=17)
-        hmm_model.fit(train_data)
-
-        bull_state = int(np.argmax(hmm_model.means_.ravel()))
-        bear_state = 1 - bull_state
-
-        # Predict states for all available returns (including post-2024)
-        all_states = hmm_model.predict(returns.values.reshape(-1, 1))
-        states_s   = pd.Series(all_states, index=returns.index)
-
-        hmm_bull = (states_s == bull_state).astype(int).shift(1).fillna(0).astype(int)
-        hmm_bear = (states_s == bear_state).astype(int).shift(1).fillna(0).astype(int)
+        hmm_bull = states_s.shift(1).fillna(0).astype(int)
+        hmm_bear = (1 - states_s).shift(1).fillna(0).astype(int)
 
         # ── Combined Signal ──────────────────────────────────────────────────
         common = vix_trend_signal.index.intersection(hmm_bull.index)

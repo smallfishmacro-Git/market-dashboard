@@ -391,22 +391,20 @@ def _compute_vix_ts():
     return df
 
 def _compute_hmm(log=print):
-    try:
-        from hmmlearn.hmm import GaussianHMM
-    except ImportError:
-        log("  hmmlearn not installed — skipping HMM")
-        return None
-    log("  Training HMM (~30s)...")
+    from hmm_regime import fit_hmm_expanding
+    log("  Training HMM (expanding-window quarterly refit)...")
     spx = _load_spx()[["last"]].dropna().sort_index()
     spx["ret"] = spx["last"].pct_change()
-    train = spx["ret"].dropna().values.reshape(-1, 1)
-    hmm   = GaussianHMM(n_components=2, covariance_type="full",
-                        n_iter=300, random_state=17, tol=1e-3)
-    hmm.fit(train)
-    bull  = int(np.argmax(hmm.means_.ravel()))
-    regs  = hmm.predict(train)
-    spx.loc[spx["ret"].dropna().index, "Regime"] = regs
-    spx["Trend"] = (spx["Regime"] == bull).astype(float).shift(1).fillna(0)
+    returns = spx["ret"].dropna()
+
+    # fit_hmm_expanding returns 1=bull, 0=bear, forward-filtered only
+    regime_labels = fit_hmm_expanding(returns, log_fn=log)
+    if len(regime_labels) == 0:
+        log("  HMM: no labels produced")
+        return None
+
+    spx.loc[regime_labels.index, "Regime"] = regime_labels.values
+    spx["Trend"] = spx["Regime"].shift(1).fillna(0).astype(float)
     log("  HMM done.")
     return spx
 

@@ -23,20 +23,20 @@
         "VIX3M Mean Rev (12 < VIX3M < 20)": false
       },
       "feature_values": {
-        "VRatio": 1.202,
+        "VRatio": 1.207,
         "Contango": 8.55,
-        "Contango Roll": 27.19,
-        "VRP": 5.83,
-        "FVRP": 7.18,
-        "Vol Momentum": 4.11,
-        "VIX": 16.67,
+        "Contango Roll": 27.81,
+        "VRP": 5.75,
+        "FVRP": 7.16,
+        "Vol Momentum": 4.18,
+        "VIX": 16.59,
         "VIX3M": 20.03
       }
     },
     "ml_logreg": {
       "signal": "RISK-ON",
       "signal_value": 1,
-      "probability": 0.3723,
+      "probability": 0.3689,
       "threshold": 0.5,
       "target": "\u22655% drawdown in 20 trading days"
     }
@@ -20361,7 +20361,7 @@
       },
       {
         "d": "2026-05-22",
-        "v": 0.3723
+        "v": 0.3689
       }
     ]
   },

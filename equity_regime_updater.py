@@ -90,13 +90,17 @@ HISTORICAL_DIR = Path(os.environ.get("EQUITY_HISTORICAL_DIR", "historical"))
 
 HISTORICAL_CSV_MAP = {
     # api_column     : list of CSV filenames to try (first match wins)
-    "eps_cny":     ["MySPEPSCNY.csv",  "P123_Series_37_20260522.csv"],
-    "eps_ttm":     ["SPEPSTTM.csv",    "P123_Series_16_20260522.csv"],
+    "eps_cny":     ["MySPEPSCNY.csv",            "P123_Series_37_20260522.csv"],
+    "eps_ttm":     ["SPEPSTTM.csv",              "P123_Series_16_20260522.csv"],
     "eps_q":       ["MySPEPSQ.csv"],
     "eps_cy":      ["MySPEPSCY.csv"],
     "eps_ny":      ["MySPEPSNY.csv"],
-    # rev_breadth has full history from the API already (it's a real user series),
-    # so no CSV needed. yield_blend and rp_blend can be derived downstream.
+    # rev_breadth: P123 custom series, definition changed from 1-week to 1-month
+    # revisions in May 2026. The CSV holds full 2003+ history of the NEW definition.
+    # The API also returns the new definition going forward. No scale mismatch.
+    # NOTE: this CSV is daily; merge code resamples to weekly Friday automatically.
+    "rev_breadth": ["RevisionsBreadth1M.csv",    "P123_Series_19495_20260529.csv"],
+    # yield_blend and rp_blend can be derived downstream from EPS + SPX price.
 }
 
 
@@ -228,14 +232,40 @@ def _read_p123_csv(path: Path) -> pd.DataFrame:
       ...
 
     Returns a DataFrame with Date index and a single 'value' column.
+
+    If the source is daily (median gap == 1 calendar day), automatically
+    resamples to weekly Friday snapshots using the last observation in each
+    week — matches the weekly cadence of the rest of the pipeline.
     """
     # The first 3 lines are metadata; row 4 is blank; row 5 is the real header.
     df = pd.read_csv(path, skiprows=4)
     df.columns = [c.strip().lower() for c in df.columns]
     df["date"] = pd.to_datetime(df["date"])
     df = df.set_index("date").sort_index()
-    df = df.rename(columns={"value": "value"})
     df["value"] = pd.to_numeric(df["value"], errors="coerce")
+
+    # Normalize to weekly-Friday cadence so all sources align on the same date grid.
+    # P123 CSV conventions vary:
+    #   - MySPEPSCNY, SPEPSTTM: weekly Saturday/Sunday snapshots
+    #   - RevisionsBreadth1M: business-daily
+    #   - API: weekly Friday
+    # Without this normalization, the merge unions different date grids and the
+    # output JSON balloons to ~2x rows with each series sparse.
+    if len(df) >= 10:
+        median_gap_days = df.index.to_series().diff().dt.days.dropna().median()
+        if median_gap_days is not None and median_gap_days <= 3:
+            # Daily source → resample to weekly Friday using last value in each week
+            df = df.resample("W-FRI").last().dropna()
+            print(f"[csv] {path.name}: resampled daily → weekly Friday ({len(df)} rows)")
+        else:
+            # Already weekly but possibly off-Friday: snap each date back to the
+            # prior Friday so Sat/Sun snapshots align with Fri-anchored API.
+            days_back = (df.index.weekday - 4) % 7   # Fri=0, Sat=1, Sun=2, Mon=3, ...
+            df.index = df.index - pd.to_timedelta(days_back, unit="D")
+            # Deduplicate in case two adjacent observations now share a Friday
+            df = df[~df.index.duplicated(keep="last")]
+            print(f"[csv] {path.name}: snapped weekly to Friday ({len(df)} rows)")
+
     return df[["value"]]
 
 
@@ -365,8 +395,16 @@ def composite_signal(df: pd.DataFrame) -> pd.DataFrame:
     # 1. EPS growth: CY blend YoY positive
     s["f_growth"] = (df["eps_cny_yoy"] > 0).astype(int) - (df["eps_cny_yoy"] < 0).astype(int)
 
-    # 2. Revisions breadth positive
-    s["f_breadth"] = (df["rev_breadth"] > 0).astype(int) - (df["rev_breadth"] < 0).astype(int)
+    # 2. Revisions breadth above its 52-week rolling median.
+    # The custom series measures "% of stocks with 1-month positive revisions";
+    # it's bounded roughly [14, 67] with long-term mean ~38. A static threshold
+    # is meaningless on this scale; we use a dynamic baseline so the factor
+    # captures regime shifts vs the recent past rather than absolute level.
+    breadth_baseline = df["rev_breadth"].rolling(window=52, min_periods=12).median()
+    s["f_breadth"] = (
+        (df["rev_breadth"] > breadth_baseline).astype(int)
+        - (df["rev_breadth"] < breadth_baseline).astype(int)
+    )
 
     # 3. Acceleration: CY YoY rising vs 13 weeks ago
     accel = df["eps_cny_yoy"] - df["eps_cny_yoy"].shift(13)
@@ -400,10 +438,24 @@ def to_json_payload(df: pd.DataFrame, sig: pd.DataFrame) -> dict:
     df_out["date"]  = df_out["date"].dt.strftime("%Y-%m-%d")
     sig_out["date"] = sig_out["date"].dt.strftime("%Y-%m-%d")
 
+    # CRITICAL: Replace NaN with None so json.dumps emits valid `null` instead of
+    # the non-standard `NaN` literal (which Python tolerates but JSON.parse rejects).
+    # The first ~52 weekly rows of every *_yoy column are NaN by design (no prior
+    # year to compare against), so this affects ~52 rows × ~5 yoy cols = ~260 cells.
+    df_out  = df_out.astype(object).where(pd.notna(df_out), None)
+    sig_out = sig_out.astype(object).where(pd.notna(sig_out), None)
+
     # Latest snapshot for KPI strip
     last        = df.iloc[-1]
     last_sig    = sig.iloc[-1]
     prev_4w_sig = sig.iloc[-5] if len(sig) >= 5 else last_sig
+
+    # Long-term breadth baseline for the KPI tile context line
+    # "48.7 · +10pp above median"
+    breadth_series   = df["rev_breadth"].dropna()
+    breadth_median   = float(breadth_series.median()) if len(breadth_series) > 0 else None
+    breadth_baseline_52w = float(breadth_series.rolling(52, min_periods=12).median().iloc[-1]) \
+                           if len(breadth_series) >= 12 else None
 
     latest = {
         "asof":            df.index[-1].strftime("%Y-%m-%d"),
@@ -417,7 +469,9 @@ def to_json_payload(df: pd.DataFrame, sig: pd.DataFrame) -> dict:
         "yield_blend":     _r(last.get("yield_blend")),
         "rp_blend":        _r(last.get("rp_blend")),
         "rev_breadth":     _r(last.get("rev_breadth")),
-        "rev_breadth_prior": _r(df["rev_breadth"].iloc[-5] if len(df) >= 5 else None),
+        "rev_breadth_prior":      _r(df["rev_breadth"].iloc[-5] if len(df) >= 5 else None),
+        "rev_breadth_median_lt":  _r(breadth_median),     # long-term median, ~38
+        "rev_breadth_baseline_52w": _r(breadth_baseline_52w),  # current 52w rolling median (trigger reference)
         "score":           int(last_sig["score"]),
         "regime":          last_sig["regime"],
         "components": {
@@ -471,9 +525,12 @@ def main() -> int:
     # 4-factor composite
     sig = composite_signal(enriched)
 
-    # Serialize
+    # Serialize. allow_nan=False makes json.dumps RAISE on any NaN that slipped
+    # through (instead of silently emitting the non-standard `NaN` literal that
+    # JSON.parse on the frontend would reject). We already convert NaN→None in
+    # to_json_payload, so this should never trigger; if it does, it's a bug.
     payload = to_json_payload(enriched, sig)
-    OUTPUT_PATH.write_text(json.dumps(payload, indent=2))
+    OUTPUT_PATH.write_text(json.dumps(payload, indent=2, allow_nan=False))
     print(f"[ok] wrote {OUTPUT_PATH} — {len(payload['series'])} weekly rows, regime={payload['latest']['regime']}")
     return 0
 

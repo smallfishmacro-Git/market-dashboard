@@ -44,6 +44,13 @@ jobs:
       - name: Compute Market Risk JSON for Vercel app
         run: python compute_market_risk_json.py
 
+      - name: Compute Equity Regime JSON for Vercel app
+        env:
+          P123_API_ID:  ${{ secrets.P123_API_ID }}
+          P123_API_KEY: ${{ secrets.P123_API_KEY }}
+          EQUITY_REGIME_OUTPUT: data/datasets/equity_regime.json
+        run: python equity_regime_updater.py
+
       - name: Commit and push updated data
         run: |
           git config user.name  "github-actions[bot]"

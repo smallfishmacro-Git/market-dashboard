@@ -41,6 +41,8 @@ INDICATORS = [
     ("SuperTrend Medium Term",         "ST_MT",           "thm", "#00ff88"),
     ("SuperTrend Short Term",          "ST_ST",           "thm", "#00ff88"),
     ("VIX Term Structure x HMM",       "VIX_HMM",        "thm", "#ff6b6b"),
+    ("Dual Momentum vs TLT",           "DM_TLT",          "thm", "#00d4ff"),
+    ("Dual Momentum vs VIXY",          "DM_VIXY",         "thm", "#a855f7"),
 ]
 
 

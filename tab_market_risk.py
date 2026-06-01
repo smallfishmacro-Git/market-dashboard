@@ -497,6 +497,44 @@ def _compute_vix_hmm_combined(vts_trend, hmm_trend):
     combined = (vts + hmm).clip(0, 1).astype(int)
     return pd.DataFrame({"Trend": combined})
 
+def _compute_dual_momentum(benchmark_ticker, period=20, log=print):
+    """
+    Dual Momentum bearish-flash indicator: SPX vs a benchmark ETF.
+    Mirrors PineScript 'Dual Momentum Background':
+        mainROC  = SPX   N-bar rate-of-change   ((p - p[N]) / p[N])
+        benchROC = bench N-bar rate-of-change
+        bearish  = mainROC < 0 AND mainROC < benchROC
+    Health-model convention (matches every other THM indicator):
+        Trend = 0 -> SHORT / risk-off (bearish flash); 1 -> LONG / risk-on (else)
+    Trailing ROC is causal (past prices only) -> no lookahead.
+    """
+    import yfinance as yf
+    log(f"  Downloading Dual Momentum benchmark {benchmark_ticker}...")
+    data = yf.download(benchmark_ticker, start="2002-01-01", progress=False, timeout=30)
+    if data is None or data.empty:
+        raise ValueError(f"yfinance returned empty dataframe for {benchmark_ticker}")
+    bench = (data["Close"] if not isinstance(data.columns, pd.MultiIndex)
+             else data.xs("Close", axis=1, level=0))
+    if isinstance(bench, pd.DataFrame):
+        bench = bench.iloc[:, 0]
+    bench = bench.dropna()
+    if isinstance(bench.index, pd.DatetimeIndex) and bench.index.tz is not None:
+        bench.index = bench.index.tz_localize(None)
+
+    spx = _load_spx()["last"].dropna()
+    if isinstance(spx.index, pd.DatetimeIndex) and spx.index.tz is not None:
+        spx.index = spx.index.tz_localize(None)
+
+    df = pd.DataFrame({"spx": spx})
+    df["bench"] = bench.reindex(df.index, method="ffill")
+    df = df.dropna()
+
+    main_roc  = df["spx"].pct_change(period)
+    bench_roc = df["bench"].pct_change(period)
+    bearish   = (main_roc < 0) & (main_roc < bench_roc)
+    df["Trend"] = np.where(bearish, 0, 1).astype(int)
+    return df.iloc[period:]
+
 # ══════════════════════════════════════════════════════════════════════════════
 #  MASTER COMPUTE + SAVE  (run once, slow — triggered by button)
 # ══════════════════════════════════════════════════════════════════════════════
@@ -549,6 +587,8 @@ def compute_and_save_all(log=print):
     try_compute("ST_LT",          _compute_supertrend, 252, 12, log)
     try_compute("ST_MT",          _compute_supertrend,  63,  9, log)
     try_compute("ST_ST",          _compute_supertrend,  63,  5, log)
+    try_compute("DM_TLT",         _compute_dual_momentum, "TLT",  20, log)
+    try_compute("DM_VIXY",        _compute_dual_momentum, "VIXY", 20, log)
 
     # VIX x HMM requires both
     if "VIX_TS" in res and "HMM" in res:

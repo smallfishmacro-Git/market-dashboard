@@ -35,6 +35,9 @@ def main():
     core = ["be5", "be10", "real5", "hy_oas", "ig_oas"]
     df = df[df[core].notna().all(axis=1)]
     df = df[df.index >= pd.Timestamp(START)]
+    # FRED reports OAS in percent; convert HY/IG to basis points for display
+    df["hy_oas"] = df["hy_oas"] * 100.0
+    df["ig_oas"] = df["ig_oas"] * 100.0
     out = {"updated": datetime.now(timezone.utc).isoformat(),
            "dates": [d.strftime("%Y-%m-%d") for d in df.index]}
     for key in SERIES:

@@ -5,7 +5,7 @@ Fetches FRED inflation / real-yield / credit series, aligns them to business
 days, writes a compact JSON. The growth x inflation regime is computed
 client-side (so the lookback window stays interactive). Run after data_updater.py.
 """
-import json, os
+import json, os, time
 from datetime import datetime, timezone
 import pandas as pd
 from fredapi import Fred
@@ -23,12 +23,27 @@ SERIES = {
     "ig_oas":  "BAMLC0A0CM",    # ICE BofA US IG OAS
 }
 
+def _get_series(fred, tick, start, retries=5):
+    for i in range(retries):
+        try:
+            return fred.get_series(tick, start)
+        except Exception as e:
+            msg = str(e)
+            rate_limited = ("429" in msg) or ("Too Many Requests" in msg) or ("Exceeded Rate Limit" in msg)
+            if rate_limited and i < retries - 1:
+                wait = 30 * (i + 1)   # 30s, 60s, 90s... FRED's window is 60s so this clears it
+                print(f"    FRED rate-limited on {tick}; waiting {wait}s (retry {i+1}/{retries-1})...")
+                time.sleep(wait)
+                continue
+            raise
+
 def main():
     fred = Fred(api_key=FRED_KEY)
     cols = {}
     for key, tick in SERIES.items():
         print(f"  Fetching {key} ({tick})...")
-        cols[key] = fred.get_series(tick, START)
+        cols[key] = _get_series(fred, tick, START)
+        time.sleep(2)
     df = pd.DataFrame(cols).sort_index()
     df.index = pd.to_datetime(df.index)
     df = df.asfreq("B").ffill()

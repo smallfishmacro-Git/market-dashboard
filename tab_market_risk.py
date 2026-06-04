@@ -93,6 +93,23 @@ def _load_spx():
         elif c in ("low", "lo"):          rn[c] = "low"
     return df.rename(columns=rn)
 
+def _load_credit_csv(ticker):
+    """Backfill loader for a credit-spread series: historical OAS levels from
+    historical/credit_spreads/<ticker>.csv (FRED export with columns time, close).
+    Returns a float Series indexed by date, or None if the file is absent."""
+    path = os.path.join(BASE_DIR, "historical", "credit_spreads", f"{ticker}.csv")
+    if not os.path.exists(path):
+        return None
+    df = pd.read_csv(path)
+    df["time"] = pd.to_datetime(df["time"], errors="coerce")
+    df = df.dropna(subset=["time"]).set_index("time").sort_index()
+    s = pd.to_numeric(df["close"], errors="coerce").dropna()
+    try:
+        s.index = s.index.tz_localize(None)
+    except (TypeError, AttributeError):
+        pass
+    return s
+
 @st.cache_data
 def _read_cache(path, file_mtime=None):   # file_mtime busts cache when CSV changes
     if not os.path.exists(path):
@@ -178,7 +195,26 @@ def _compute_credit_spreads(log=print):
     fred  = Fred(api_key=FRED_KEY)
     ticks = ["BAMLH0A0HYM2", "BAMLC0A0CM", "BAMLEMCBPIOAS",
              "BAMLEMHBHYCRPIOAS", "BAMLHE00EHYIOAS"]
-    df = pd.DataFrame({t: fred.get_series(t, "1997-01-01") for t in ticks})
+    series = {}
+    for t in ticks:
+        fred_s = fred.get_series(t, "1997-01-01")
+        try:
+            fred_s.index = fred_s.index.tz_localize(None)
+        except (TypeError, AttributeError):
+            pass
+        csv_s = _load_credit_csv(t)
+        if csv_s is not None and len(csv_s):
+            # FRED wins on overlap (fresh + auto-appends new points daily);
+            # the CSV backfills the older history FRED no longer serves.
+            merged = fred_s.combine_first(csv_s)
+            m = merged.dropna()
+            log(f"    {t}: FRED {int(fred_s.notna().sum())} + CSV {len(csv_s)} "
+                f"-> merged {len(m)} ({m.index.min().date()}->{m.index.max().date()})")
+            series[t] = merged
+        else:
+            log(f"    {t}: no backfill CSV — FRED only ({int(fred_s.notna().sum())} pts)")
+            series[t] = fred_s
+    df = pd.DataFrame(series)
     def z_chl(s):
         s = s.dropna()
         hi5, lo5 = s.rolling(5).max(), s.rolling(5).min()

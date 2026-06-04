@@ -36,7 +36,7 @@ INDICATORS = [
     ("VIX Term Structure",             "VIX_TS",          "thm", "#f9ca24"),
     ("HMM Regime Indicator",           "HMM",             "thm", "#00ff88"),
     ("Quad 1 & 2",                     "Quad",            "thm", "#4ecdc4"),
-    ("Bitcoin Liquidity Proxy",        "BTC",             "thm", "#f9ca24"),
+    ("JM Regime Indicator",            "JM",              "thm", "#f9ca24"),
     ("SuperTrend Long Term",           "ST_LT",           "thm", "#00ff88"),
     ("SuperTrend Medium Term",         "ST_MT",           "thm", "#00ff88"),
     ("SuperTrend Short Term",          "ST_ST",           "thm", "#00ff88"),

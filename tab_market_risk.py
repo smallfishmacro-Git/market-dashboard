@@ -426,23 +426,24 @@ def _compute_quad(log=print):
     log("  Quad done.")
     return pd.DataFrame({"Trend": trend})
 
-def _compute_btc(log=print):
-    import yfinance as yf
-    log("  Downloading BTC/SPY...")
-    data = yf.download(["BTC-USD", "SPY"], start="2014-01-01",
-                       auto_adjust=True, progress=False, timeout=30)
-    if data.empty:
-        raise ValueError("yfinance returned empty dataframe for BTC/SPY")
-    prices = (data["Close"] if not isinstance(data.columns, pd.MultiIndex)
-              else data["Close"])
-    try:
-        prices.index = prices.index.tz_localize(None)
-    except Exception:
-        pass
-    rets = prices.pct_change(21).shift(1)
-    cond = (rets["BTC-USD"] > 0) & ((rets["BTC-USD"] - rets["SPY"]) > 0)
-    log("  BTC done.")
-    return pd.DataFrame({"Trend": cond.fillna(False).astype(int)})
+def _compute_jm(log=print):
+    from jm_regime import fit_jm_expanding
+    log("  Training JM (Statistical Jump Model, expanding-window yearly refit)...")
+    spx = _load_spx()[["last"]].dropna().sort_index()
+    # JM notebook uses log returns
+    spx["ret"] = np.log(spx["last"] / spx["last"].shift(1))
+    returns = spx["ret"].dropna()
+
+    # fit_jm_expanding returns 1=bull, 0=bear, forward-filtered only (point-in-time)
+    regime_labels = fit_jm_expanding(returns, jump_penalty=50.0, log_fn=log)
+    if len(regime_labels) == 0:
+        log("  JM: no labels produced")
+        return None
+
+    spx.loc[regime_labels.index, "Regime"] = regime_labels.values
+    spx["Trend"] = spx["Regime"].shift(1).fillna(0).astype(float)  # 1-day signal-to-trade lag
+    log("  JM done.")
+    return spx
 
 def _compute_supertrend(atr_period, multiplier, log=print):
     log(f"  SuperTrend ATR={atr_period} x{multiplier}...")
@@ -583,7 +584,7 @@ def compute_and_save_all(log=print):
     try_compute("VIX_TS",         _compute_vix_ts)
     try_compute("HMM",            _compute_hmm,            log)
     try_compute("Quad",           _compute_quad,           log)
-    try_compute("BTC",            _compute_btc,            log)
+    try_compute("JM",             _compute_jm,             log)
     try_compute("ST_LT",          _compute_supertrend, 252, 12, log)
     try_compute("ST_MT",          _compute_supertrend,  63,  9, log)
     try_compute("ST_ST",          _compute_supertrend,  63,  5, log)
@@ -1059,7 +1060,7 @@ def render():
         ("VIX Term Structure",              "VIX_TS",     ind_df),
         ("HMM Regime Indicator",            "HMM",        ind_df),
         ("Quad 1 & 2",                      "Quad",       ind_df),
-        ("Bitcoin Liquidity Proxy",         "BTC",        ind_df),
+        ("JM Regime Indicator",             "JM",         ind_df),
         ("SuperTrend Long Term",            "ST_LT",      ind_df),
         ("SuperTrend Medium Term",          "ST_MT",      ind_df),
         ("SuperTrend Short Term",           "ST_ST",      ind_df),
@@ -1160,7 +1161,7 @@ def render():
         ("11. VIX Term Structure",                  "VIX_TS",    "#f9ca24", "VIX TS Strategy",   "2007-01-01"),
         ("12. HMM Regime Indicator",                "HMM",       LIME,      "HMM Strategy",      "1960-01-01"),
         ("13. Quad 1 & 2",                          "Quad",      "#4ecdc4", "Quad Strategy",     "2014-01-01"),
-        ("14. Bitcoin Liquidity Proxy",             "BTC",       "#f9ca24", "BTC Strategy",      "2014-01-01"),
+        ("14. JM Regime Indicator",                 "JM",        "#f9ca24", "JM Strategy",       "1965-01-01"),
         ("15. SuperTrend Long Term (ATR 252×12)",   "ST_LT",     LIME,      "ST LT Strategy",    "1990-01-01"),
         ("16. SuperTrend Medium Term (ATR 63×9)",   "ST_MT",     LIME,      "ST MT Strategy",    "1990-01-01"),
         ("17. SuperTrend Short Term (ATR 63×5)",    "ST_ST",     LIME,      "ST ST Strategy",    "1990-01-01"),

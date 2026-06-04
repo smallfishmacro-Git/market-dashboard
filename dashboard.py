@@ -279,7 +279,7 @@ with tab1:
                 "VIX_TS":         "VIX Term Str.",
                 "HMM":            "HMM",
                 "Quad":           "Quad",
-                "BTC":            "Bitcoin",
+                "JM":             "JM Regime",
                 "ST_LT":          "ST Long",
                 "ST_MT":          "ST Medium",
                 "ST_ST":          "ST Short",

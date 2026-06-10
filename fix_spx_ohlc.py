@@ -4,6 +4,7 @@ Uses yfinance (^GSPC) as fallback. Runs after data_updater.py in GitHub Actions.
 """
 import os, sys, io, pandas as pd, yfinance as yf
 from datetime import datetime, timedelta
+from market_time import session_is_complete
 
 if isinstance(sys.stdout, io.TextIOWrapper) and sys.stdout.encoding.lower() not in ("utf-8","utf_8"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -63,16 +64,19 @@ def fix_spx_ohlc(log_fn=print):
     # --- PART 2: Add missing recent trading days ---
     log_fn("  Checking for missing recent trading days...")
     fetch_start = (datetime.now() - timedelta(days=15)).strftime("%Y-%m-%d")
-    fetch_end = datetime.now().strftime("%Y-%m-%d")
+    # yfinance treats `end` as EXCLUSIVE, so passing today drops today's bar.
+    # Push it out 2 days so today's just-closed session is actually requested;
+    # session_is_complete() below decides whether to keep it.
+    fetch_end = (datetime.now() + timedelta(days=2)).strftime("%Y-%m-%d")
     yf_recent = yf.download("^GSPC", start=fetch_start, end=fetch_end, progress=False, timeout=30)
     added = 0
     if not yf_recent.empty:
         if isinstance(yf_recent.columns, pd.MultiIndex):
             yf_recent.columns = yf_recent.columns.get_level_values(0)
         yf_recent.index = pd.to_datetime(yf_recent.index)
-        today = pd.Timestamp(datetime.now().date())
         for date in yf_recent.index:
-            if date >= today:
+            # Skip a bar only while its session is still unsettled (ET clock).
+            if not session_is_complete(date.date()):
                 continue
             if date not in df.index:
                 row = yf_recent.loc[date]

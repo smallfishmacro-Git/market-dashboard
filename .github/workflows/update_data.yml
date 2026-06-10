@@ -2,11 +2,18 @@ name: Daily Data Update
 
 on:
   schedule:
-    # All times in UTC — Geneva is CET (UTC+1) winter / CEST (UTC+2) summer
-    # During CEST (late Mar–late Oct) these run 1h later Geneva time
-    - cron: "0 5 * * 1-5"     # 06:00 Geneva CET  — pre-market
-    - cron: "20 14 * * 1-5"   # 15:20 Geneva CET  — mid-afternoon (US open settled)
-    - cron: "30 21 * * 1-5"   # 22:30 Geneva CET  — post US close
+    # All times in UTC. Minutes are deliberately off round numbers: GitHub's
+    # scheduler is most congested (and most delayed) at :00/:15/:30, so odd
+    # minutes tend to fire closer to on-time.
+    # NOTE: the post-close run must land AFTER 16:15 ET (the settle buffer in
+    # market_time.session_is_complete) in BOTH EST and EDT, or the same-day bar
+    # is correctly-but-uselessly skipped. 21:33 UTC = 16:33 ET (EST winter) /
+    # 17:33 ET (EDT summer) — safely past the buffer year-round. (The user's
+    # example "13 21" = 21:13 UTC = 16:13 ET in winter, 2 min too early, so it
+    # is intentionally not used here.)
+    - cron: "23 4 * * 1-5"    # 04:23 UTC — pre-market (refreshes prior session)
+    - cron: "37 14 * * 1-5"   # 14:37 UTC — mid-session (US open settled)
+    - cron: "33 21 * * 1-5"   # 21:33 UTC — post US close (persists same-day close)
   workflow_dispatch:   # allow manual trigger from GitHub UI
 
 permissions:
@@ -53,6 +60,9 @@ jobs:
           P123_API_KEY: ${{ secrets.P123_API_KEY }}
           EQUITY_REGIME_OUTPUT: data/datasets/equity_regime.json
         run: python equity_regime_updater.py
+
+      - name: Check data freshness (fail the run if datasets are stale)
+        run: python check_freshness.py
 
       - name: Commit and push updated data
         run: |

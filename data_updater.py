@@ -16,6 +16,7 @@ import requests  # type: ignore[import-untyped]
 import pandas as pd
 from datetime import datetime, timedelta
 from urllib.parse import unquote
+from market_time import session_is_complete
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -166,8 +167,9 @@ def update_symbol(symbol, filename, session, log_fn=print):
     new_data = df1.loc[df.index[-1] + timedelta(days=1):]
     df = pd.concat([df, new_data])
 
-    # Drop today if incomplete
-    if df.index[-1].date() == datetime.today().date():
+    # Drop the last bar only if its session hasn't settled yet (ET clock, not
+    # the UTC runner clock — see market_time.session_is_complete).
+    if not session_is_complete(df.index[-1].date()):
         df = df.iloc[:-1]
 
     # Step 5: Save
@@ -242,7 +244,8 @@ def update_futures_symbol(symbol, filename, session, log_fn=print):
     new_data = df1.loc[df.index[-1] + timedelta(days=1):]
     df = pd.concat([df, new_data])
 
-    if df.index[-1].date() == datetime.today().date():
+    # Drop the last bar only if its session hasn't settled yet (ET clock).
+    if not session_is_complete(df.index[-1].date()):
         df = df.iloc[:-1]
 
     df.to_csv(file_path)

@@ -64,11 +64,13 @@ def fix_spx_ohlc(log_fn=print):
     # --- PART 2: Add missing recent trading days ---
     log_fn("  Checking for missing recent trading days...")
     fetch_start = (datetime.now() - timedelta(days=15)).strftime("%Y-%m-%d")
-    # yfinance treats `end` as EXCLUSIVE, so passing today drops today's bar.
-    # Push it out 2 days so today's just-closed session is actually requested;
-    # session_is_complete() below decides whether to keep it.
-    fetch_end = (datetime.now() + timedelta(days=2)).strftime("%Y-%m-%d")
-    yf_recent = yf.download("^GSPC", start=fetch_start, end=fetch_end, progress=False, timeout=30)
+    # No `end=`: yfinance's end is EXCLUSIVE, so any fixed end is wrong both ways
+    # — today-exclusive drops today's just-closed bar (the BD-2 bug), while a
+    # future end makes Yahoo hand back the latest bar as NaN. Omitting end fetches
+    # through the latest AVAILABLE bar; session_is_complete() gates a partial
+    # same-day bar, and the NaN-guard below drops any bar Yahoo hasn't finalized
+    # yet (its prior-session EOD often lags into the next morning as all-NaN).
+    yf_recent = yf.download("^GSPC", start=fetch_start, progress=False, timeout=30)
     added = 0
     if not yf_recent.empty:
         if isinstance(yf_recent.columns, pd.MultiIndex):

@@ -61,9 +61,6 @@ jobs:
           EQUITY_REGIME_OUTPUT: data/datasets/equity_regime.json
         run: python equity_regime_updater.py
 
-      - name: Check data freshness (fail the run if datasets are stale)
-        run: python check_freshness.py
-
       - name: Commit and push updated data
         run: |
           git config user.name  "github-actions[bot]"
@@ -71,3 +68,11 @@ jobs:
           git add data/barchart/*.csv data/datasets/*.csv data/datasets/*.json
           git diff --staged --quiet || git commit -m "chore: data update $(date -u +%Y-%m-%d_%H:%M)"
           git push
+
+      # Freshness runs AFTER the commit, on purpose: it's a staleness ALARM, not
+      # a publish gate. A single lagging source (e.g. Yahoo's prior-session EOD
+      # arriving late) should not block committing breadth/BTD data that IS
+      # fresh. The run still goes red on mismatch so the staleness is visible.
+      - name: Check data freshness (alarm — red if any dataset is stale)
+        if: always()
+        run: python check_freshness.py

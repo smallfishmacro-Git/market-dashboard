@@ -74,6 +74,11 @@ def fix_spx_ohlc(log_fn=print):
         if isinstance(yf_recent.columns, pd.MultiIndex):
             yf_recent.columns = yf_recent.columns.get_level_values(0)
         yf_recent.index = pd.to_datetime(yf_recent.index)
+        # Yahoo can return an all-NaN bar for a just-settled session during
+        # pre-market hours. Never insert a NaN bar — it would poison _load_spx()
+        # (dropna) downstream and stall the THM at BD-2. Drop them; the row
+        # fills on a later run once Yahoo settles real OHLC.
+        yf_recent = yf_recent.dropna(subset=["Open", "High", "Low", "Close"])
         for date in yf_recent.index:
             # Skip a bar only while its session is still unsettled (ET clock).
             if not session_is_complete(date.date()):

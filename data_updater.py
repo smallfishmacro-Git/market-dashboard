@@ -147,7 +147,22 @@ def update_symbol(symbol, filename, session, log_fn=print):
     df1.index = pd.to_datetime(df1.index, errors="coerce")
     df1 = df1[df1.index.notna()].sort_index()
     df1 = df1.iloc[:, :7]
-    df1.columns = df.columns
+    if len(df1.columns) == len(df.columns):
+        # Standard 7-column schema (Open,High,Low,Last,Change,%Chg,Volume) — the
+        # API's first 7 fields line up positionally with the CSV columns.
+        df1.columns = df.columns
+    else:
+        # Non-standard target schema. The $SPX CSV carries an extra trailing
+        # "Change%" column (8 total) because fix_spx_ohlc.py populates it from
+        # yfinance. The Barchart API only supplies the standard 7, so name them to
+        # the leading 7 CSV columns and reindex onto the full set; columns the API
+        # doesn't provide (SPX's "Change%") default to 0 on Barchart-sourced rows.
+        # Price columns (Open/High/Low/Last) — the ones the dashboards read — are
+        # filled correctly, giving SPX a Barchart source again alongside yfinance.
+        # Without this, $SPX raised a length-mismatch every run and SPX depended
+        # solely on yfinance.
+        df1.columns = list(df.columns[:len(df1.columns)])
+        df1 = df1.reindex(columns=df.columns, fill_value=0)
 
     for col in ["Open", "High", "Low", "Last"]:
         if col in df1.columns:

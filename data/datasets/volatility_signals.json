@@ -1,16 +1,16 @@
 {
-  "last_updated": "2026-06-12",
+  "last_updated": "2026-06-15",
   "data_range": {
     "start": "2008-01-28",
-    "end": "2026-06-12",
-    "trading_days": 4624
+    "end": "2026-06-15",
+    "trading_days": 4625
   },
   "current_signals": {
-    "date": "2026-06-12",
+    "date": "2026-06-15",
     "part3_rule": {
       "signal": "RISK-ON",
       "signal_value": 1,
-      "signals_on": 5,
+      "signals_on": 6,
       "signals_required": 4,
       "individual_signals": {
         "VRatio (VIX3M/VIX > 1)": true,
@@ -20,23 +20,23 @@
         "Fast VRP (EMA7-HV5 > 0)": false,
         "Vol Momentum (SMA50-VIX > 0)": true,
         "VIX Mean Rev (12 < VIX < 20)": true,
-        "VIX3M Mean Rev (12 < VIX3M < 20)": false
+        "VIX3M Mean Rev (12 < VIX3M < 20)": true
       },
       "feature_values": {
-        "VRatio": 1.223,
-        "Contango": 12.21,
-        "Contango Roll": 13.42,
-        "VRP": -2.69,
-        "FVRP": -0.79,
-        "Vol Momentum": 1.61,
-        "VIX": 16.77,
-        "VIX3M": 20.51
+        "VRatio": 1.195,
+        "Contango": 13.95,
+        "Contango Roll": 13.33,
+        "VRP": -5.31,
+        "FVRP": -4.28,
+        "Vol Momentum": 2.03,
+        "VIX": 16.2,
+        "VIX3M": 19.36
       }
     },
     "ml_logreg": {
       "signal": "RISK-ON",
       "signal_value": 1,
-      "probability": 0.4212,
+      "probability": 0.4452,
       "threshold": 0.5,
       "target": "\u22655% drawdown in 20 trading days"
     }
@@ -44,27 +44,27 @@
   "performance": {
     "buy_hold": {
       "label": "Buy & Hold",
-      "cagr": 9.83,
+      "cagr": 9.92,
       "volatility": 19.91,
-      "sharpe": 0.49,
+      "sharpe": 0.5,
       "max_drawdown": -52.58,
-      "total_return": 458.5
+      "total_return": 467.73
     },
     "part3_rule": {
       "label": "Part 3 Rule",
-      "cagr": 7.73,
-      "volatility": 12.87,
-      "sharpe": 0.6,
+      "cagr": 7.82,
+      "volatility": 12.88,
+      "sharpe": 0.61,
       "max_drawdown": -30.53,
-      "total_return": 291.71
+      "total_return": 298.19
     },
     "ml_logreg": {
       "label": "ML LogReg (p\u22650.50)",
-      "cagr": 5.03,
-      "volatility": 15.1,
-      "sharpe": 0.33,
+      "cagr": 5.13,
+      "volatility": 15.11,
+      "sharpe": 0.34,
       "max_drawdown": -52.58,
-      "total_return": 146.15
+      "total_return": 150.22
     }
   },
   "equity_curves": {
@@ -3487,18 +3487,6 @@
       },
       {
         "d": "2024-06-14",
-        "v": 4.0397
-      },
-      {
-        "d": "2024-06-12",
-        "v": 4.0741
-      },
-      {
-        "d": "2024-06-13",
-        "v": 4.0836
-      },
-      {
-        "d": "2024-06-14",
         "v": 4.082
       },
       {
@@ -5500,6 +5488,10 @@
       {
         "d": "2026-06-12",
         "v": 5.585
+      },
+      {
+        "d": "2026-06-15",
+        "v": 5.6773
       }
     ],
     "part3_rule": [
@@ -8921,18 +8913,6 @@
       },
       {
         "d": "2024-06-14",
-        "v": 3.4571
-      },
-      {
-        "d": "2024-06-12",
-        "v": 3.4865
-      },
-      {
-        "d": "2024-06-13",
-        "v": 3.4947
-      },
-      {
-        "d": "2024-06-14",
         "v": 3.4933
       },
       {
@@ -10934,6 +10914,10 @@
       {
         "d": "2026-06-12",
         "v": 3.9171
+      },
+      {
+        "d": "2026-06-15",
+        "v": 3.9819
       }
     ],
     "ml_logreg": [
@@ -14355,18 +14339,6 @@
       },
       {
         "d": "2024-06-14",
-        "v": 2.2241
-      },
-      {
-        "d": "2024-06-12",
-        "v": 2.243
-      },
-      {
-        "d": "2024-06-13",
-        "v": 2.2483
-      },
-      {
-        "d": "2024-06-14",
         "v": 2.2474
       },
       {
@@ -16368,23 +16340,15 @@
       {
         "d": "2026-06-12",
         "v": 2.4615
+      },
+      {
+        "d": "2026-06-15",
+        "v": 2.5022
       }
     ]
   },
   "signal_charts": {
     "part3_rule": [
-      {
-        "d": "2024-06-12",
-        "v": 1
-      },
-      {
-        "d": "2024-06-13",
-        "v": 1
-      },
-      {
-        "d": "2024-06-14",
-        "v": 1
-      },
       {
         "d": "2024-06-17",
         "v": 1
@@ -18384,21 +18348,13 @@
       {
         "d": "2026-06-12",
         "v": 1
+      },
+      {
+        "d": "2026-06-15",
+        "v": 1
       }
     ],
     "ml_probability": [
-      {
-        "d": "2024-06-12",
-        "v": 0.3317
-      },
-      {
-        "d": "2024-06-13",
-        "v": 0.3163
-      },
-      {
-        "d": "2024-06-14",
-        "v": 0.3291
-      },
       {
         "d": "2024-06-17",
         "v": 0.3371
@@ -20385,7 +20341,7 @@
       },
       {
         "d": "2026-06-09",
-        "v": 0.5182
+        "v": 0.5181
       },
       {
         "d": "2026-06-10",
@@ -20397,7 +20353,11 @@
       },
       {
         "d": "2026-06-12",
-        "v": 0.4212
+        "v": 0.4242
+      },
+      {
+        "d": "2026-06-15",
+        "v": 0.4452
       }
     ]
   },

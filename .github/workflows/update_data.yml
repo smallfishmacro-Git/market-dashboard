@@ -54,6 +54,9 @@ jobs:
       - name: Compute Risk Regime JSON for Vercel app
         run: python compute_risk_regime.py
 
+      - name: Compute VIXY model JSON for Vercel app
+        run: python compute_vixy_json.py
+
       - name: Compute Equity Regime JSON for Vercel app
         env:
           P123_API_ID:  ${{ secrets.P123_API_ID }}

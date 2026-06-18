@@ -8,14 +8,14 @@
   "current_signals": {
     "date": "2026-06-17",
     "part3_rule": {
-      "signal": "RISK-OFF",
-      "signal_value": 0,
-      "signals_on": 3,
+      "signal": "RISK-ON",
+      "signal_value": 1,
+      "signals_on": 4,
       "signals_required": 4,
       "individual_signals": {
         "VRatio (VIX3M/VIX > 1)": true,
         "Contango (VX2/VX1-1 > -5%)": true,
-        "Contango Roll (VX2/VIX-1 > 10%)": false,
+        "Contango Roll (VX2/VIX-1 > 10%)": true,
         "VRP (VIX-HV10 > 0)": false,
         "Fast VRP (EMA7-HV5 > 0)": false,
         "Vol Momentum (SMA50-VIX > 0)": false,
@@ -24,8 +24,8 @@
       },
       "feature_values": {
         "VRatio": 1.118,
-        "Contango": 18.86,
-        "Contango Roll": 4.42,
+        "Contango": 5.49,
+        "Contango Roll": 10.15,
         "VRP": -3.7,
         "FVRP": -3.08,
         "Vol Momentum": -0.51,
@@ -34,9 +34,9 @@
       }
     },
     "ml_logreg": {
-      "signal": "RISK-ON",
-      "signal_value": 1,
-      "probability": 0.4878,
+      "signal": "RISK-OFF",
+      "signal_value": 0,
+      "probability": 0.5151,
       "threshold": 0.5,
       "target": "\u22655% drawdown in 20 trading days"
     }
@@ -18383,7 +18383,7 @@
       },
       {
         "d": "2026-06-17",
-        "v": 0
+        "v": 1
       }
     ],
     "ml_probability": [
@@ -20397,7 +20397,7 @@
       },
       {
         "d": "2026-06-17",
-        "v": 0.4878
+        "v": 0.5151
       }
     ]
   },
@@ -20605,12 +20605,6 @@
         "date": "2026-06-12",
         "action": "ENTER",
         "spx": 7431.46,
-        "signal": "Part 3 Rule"
-      },
-      {
-        "date": "2026-06-17",
-        "action": "EXIT",
-        "spx": 7420.1,
         "signal": "Part 3 Rule"
       }
     ],
@@ -20853,6 +20847,12 @@
         "date": "2026-06-12",
         "action": "ENTER",
         "spx": 7431.46,
+        "signal": "ML LogReg"
+      },
+      {
+        "date": "2026-06-17",
+        "action": "EXIT",
+        "spx": 7420.1,
         "signal": "ML LogReg"
       }
     ]

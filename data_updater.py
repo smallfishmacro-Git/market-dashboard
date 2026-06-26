@@ -29,6 +29,13 @@ if isinstance(sys.stderr, io.TextIOWrapper) and sys.stderr.encoding.lower() not 
 # ── Paths ───────────────────────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BARCHART = os.path.join(BASE_DIR, "data", "barchart")
+
+# Most-recent EOD bars to pull per symbol each run. A wide window makes the
+# upsert self-healing: any day Barchart back-fills later (e.g. the breadth
+# internals whose settled close publishes on a lag) is corrected on a subsequent
+# run as long as it still falls inside this window. Override with the
+# BARCHART_FETCH_LIMIT env var for a one-off deep back-fill.
+FETCH_LIMIT = int(os.getenv("BARCHART_FETCH_LIMIT", "120"))
 DATASETS = os.path.join(BASE_DIR, "data", "datasets")
 
 # ── Master list of all 50 symbols ───────────────────────────────────────────────
@@ -99,8 +106,6 @@ def update_symbol(symbol, filename, session, log_fn=print):
     df = pd.read_csv(file_path, parse_dates=True, index_col=0, date_format="%Y-%m-%d")
     df.index = pd.to_datetime(df.index, errors="coerce")
     df = df[df.index.notna()].sort_index()
-    if len(df) > 1:
-        df = df.iloc[:-1]
 
     # Step 1: GET the page to obtain XSRF token
     get_url = f"https://www.barchart.com/stocks/quotes/{symbol}/price-history/"
@@ -130,7 +135,7 @@ def update_symbol(symbol, filename, session, log_fn=print):
         "type": "eod",
         "orderBy": "tradeTime",
         "orderDir": "desc",
-        "limit": 65,
+        "limit": FETCH_LIMIT,
         "raw": "1",
     }
     response = session.get(api_url, params=payload, headers=api_headers, timeout=15)
@@ -163,18 +168,25 @@ def update_symbol(symbol, filename, session, log_fn=print):
         if len(df1) < before:
             log_fn(f'  ?? {symbol}: dropped {before - len(df1)} rows with empty OHLC')
 
-    # Step 4: Append only new rows
-    new_data = df1.loc[df.index[-1] + timedelta(days=1):]
-    df = pd.concat([df, new_data])
+    # Step 4: Upsert the freshly-pulled window over the stored history.
+    # Settlement is decided by DATA, not the wall clock: Barchart publishes the
+    # breadth internals' settled close on a lag, so a clock-"complete" bar can
+    # still come back with an empty Last. We therefore (a) keep only rows whose
+    # Last is populated and (b) additionally require the ET session to be
+    # complete. Fresh settled rows then overwrite the stored row for the same
+    # date, so any day written empty earlier is back-filled automatically on a
+    # later run — no more permanently-frozen nulls.
+    fresh = df1[df1["Last"].notna()] if "Last" in df1.columns else df1
+    fresh = fresh[[session_is_complete(d.date()) for d in fresh.index]]
 
-    # Drop the last bar only if its session hasn't settled yet (ET clock, not
-    # the UTC runner clock — see market_time.session_is_complete).
-    if not session_is_complete(df.index[-1].date()):
-        df = df.iloc[:-1]
+    prev_last = df.index.max() if len(df) else None
+    df = pd.concat([df, fresh])
+    df = df[~df.index.duplicated(keep="last")].sort_index()
+    new_rows = int((df.index > prev_last).sum()) if prev_last is not None else len(df)
 
     # Step 5: Save
     df.to_csv(file_path)
-    log_fn(f"  ✅  {symbol:15s} — {len(new_data)} new row(s) added  →  {filename}")
+    log_fn(f"  ✅  {symbol:15s} — {new_rows} new, {len(fresh)} settled in window  →  {filename}")
     return True
 
 

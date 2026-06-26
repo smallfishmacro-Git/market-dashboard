@@ -36,6 +36,20 @@ BARCHART = os.path.join(BASE_DIR, "data", "barchart")
 # run as long as it still falls inside this window. Override with the
 # BARCHART_FETCH_LIMIT env var for a one-off deep back-fill.
 FETCH_LIMIT = int(os.getenv("BARCHART_FETCH_LIMIT", "120"))
+
+# Breadth internals whose settled Last is currently ABSENT from Barchart's EOD
+# API response (only Open/Low/Change come back). For these, Last is rebuilt from
+# the still-valid daily Change. A real Last, whenever the API returns one, is
+# never overwritten and re-anchors the chain — so this self-corrects if Barchart
+# restores the field.
+RECONSTRUCT_FROM_CHANGE = {
+    "NYSE_Advancing_Stocks_$NSHU.csv",
+    "NYSE_Declining_Stocks_$NSHD.csv",
+    "NYSE_Advancing_Volume_$NVLU.csv",
+    "NYSE_Declining_Volume_$DVCN.csv",
+    "NASD_Advancing_Stocks_$QSHU.csv",
+    "NASD_Declining_Stocks_$QSHD.csv",
+}
 DATASETS = os.path.join(BASE_DIR, "data", "datasets")
 
 # ── Master list of all 50 symbols ───────────────────────────────────────────────
@@ -169,24 +183,53 @@ def update_symbol(symbol, filename, session, log_fn=print):
             log_fn(f'  ?? {symbol}: dropped {before - len(df1)} rows with empty OHLC')
 
     # Step 4: Upsert the freshly-pulled window over the stored history.
-    # Settlement is decided by DATA, not the wall clock: Barchart publishes the
-    # breadth internals' settled close on a lag, so a clock-"complete" bar can
-    # still come back with an empty Last. We therefore (a) keep only rows whose
-    # Last is populated and (b) additionally require the ET session to be
-    # complete. Fresh settled rows then overwrite the stored row for the same
-    # date, so any day written empty earlier is back-filled automatically on a
-    # later run — no more permanently-frozen nulls.
-    fresh = df1[df1["Last"].notna()] if "Last" in df1.columns else df1
+    # Normal symbols: keep only settled rows (non-null Last). Breadth internals
+    # whose Last the API no longer returns: keep every row so their Open/Low/
+    # Change reach the file, and rebuild Last from Change just below.
+    reconstruct = filename in RECONSTRUCT_FROM_CHANGE
+    if reconstruct:
+        fresh = df1
+    else:
+        fresh = df1[df1["Last"].notna()] if "Last" in df1.columns else df1
     fresh = fresh[[session_is_complete(d.date()) for d in fresh.index]]
 
     prev_last = df.index.max() if len(df) else None
-    df = pd.concat([df, fresh])
-    df = df[~df.index.duplicated(keep="last")].sort_index()
+    combined = pd.concat([df, fresh])
+    combined = combined[~combined.index.duplicated(keep="last")].sort_index()
+
+    # Never let a fresh null Last erase a Last we already have (a null pull is
+    # "no new info", not "the value is gone"). Restore stored Last where the
+    # merged row came back empty.
+    if "Last" in combined.columns and "Last" in df.columns:
+        prior_last = df["Last"].reindex(combined.index)
+        combined["Last"] = combined["Last"].where(combined["Last"].notna(), prior_last)
+    df = combined
+
+    # Step 4b: Rebuild missing Last from daily Change for the affected breadth
+    # internals (Last[t] = Last[t-1] + Change[t]). Real Last values are left
+    # untouched and re-anchor the running sum.
+    if reconstruct and "Change" in df.columns:
+        change_num = pd.to_numeric(
+            df["Change"].astype(str).str.replace(",", "", regex=False)
+                        .str.strip().replace({"unch": "0"}),
+            errors="coerce",
+        )
+        vals = df["Last"].tolist()
+        chg = change_num.tolist()
+        filled = 0
+        for i in range(1, len(vals)):
+            if pd.isna(vals[i]) and pd.notna(vals[i - 1]) and pd.notna(chg[i]):
+                vals[i] = vals[i - 1] + chg[i]
+                filled += 1
+        df["Last"] = vals
+        if filled:
+            log_fn(f"  ↻  {symbol:15s} — rebuilt {filled} Last from Change")
+
     new_rows = int((df.index > prev_last).sum()) if prev_last is not None else len(df)
 
     # Step 5: Save
     df.to_csv(file_path)
-    log_fn(f"  ✅  {symbol:15s} — {new_rows} new, {len(fresh)} settled in window  →  {filename}")
+    log_fn(f"  ✅  {symbol:15s} — {new_rows} new row(s)  →  {filename}")
     return True
 
 

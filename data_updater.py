@@ -159,6 +159,15 @@ def update_symbol(symbol, filename, session, log_fn=print):
         log_fn(f"  ⚠️  No data returned for {symbol}")
         return False
 
+    # [DIAG] temporary — log what the breadth symbols actually fetched so we can
+    # confirm the running code uses the new fields and whether the API returned a
+    # real lastPrice in this environment. Remove after diagnosis.
+    if filename in RECONSTRUCT_FROM_CHANGE:
+        _r0 = data["data"][0]
+        _lp = _r0.get("lastPrice") if isinstance(_r0, dict) else None
+        log_fn(f"  [DIAG] {symbol}: fields_has_openInterest={'openInterest' in payload['fields']} "
+               f"latest_lastPrice={_lp!r} n_rows={len(data['data'])}")
+
     # Step 3: Process new data
     df1 = pd.DataFrame(data["data"])
     df1.set_index(df1.iloc[:, 0].name, inplace=True)

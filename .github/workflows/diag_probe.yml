@@ -1,0 +1,18 @@
+name: diag-barchart-probe
+on: { workflow_dispatch: {} }
+permissions: { contents: write }
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install requests
+      - run: python diag_barchart_probe.py
+      - run: |
+          git config user.name "diag-bot"; git config user.email "diag@local"
+          git add data/diag/barchart_probe.json
+          git commit -m "diag: barchart actions probe" || echo "no change"
+          git pull --no-rebase --no-edit || true
+          git push

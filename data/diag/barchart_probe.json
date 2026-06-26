@@ -1,692 +1,86 @@
-[
-  {
-    "symbol": "$SPX",
-    "ua": "old_chrome",
-    "get_status": 200,
-    "cookies": [
-      "XSRF-TOKEN",
-      "laravel_session",
-      "laravel_token",
-      "market"
+{
+  "A_simple_lim6_baseline": {
+    "status": 200,
+    "n": 5,
+    "last": [
+      "1,691.00",
+      "1,523.00",
+      "1,477.00"
     ],
-    "api_status": 200,
-    "api_len": 1803,
-    "rows": [
-      {
-        "tradeTime": "06/26/2026",
-        "openPrice": "7,312.74",
-        "highPrice": "7,369.91",
-        "lowPrice": "7,294.18",
-        "lastPrice": "7,357.98",
-        "priceChange": "+0.49",
-        "percentChange": "+0.01%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-26",
-          "openPrice": 7312.74,
-          "highPrice": 7369.91,
-          "lowPrice": 7294.18,
-          "lastPrice": 7357.98,
-          "priceChange": 0.49,
-          "percentChange": 6.6598799e-05,
-          "volume": 0
-        }
-      },
-      {
-        "tradeTime": "06/25/2026",
-        "openPrice": "7,419.08",
-        "highPrice": "7,419.08",
-        "lowPrice": "7,323.85",
-        "lastPrice": "7,357.49",
-        "priceChange": "-0.73",
-        "percentChange": "-0.01%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-25",
-          "openPrice": 7419.08,
-          "highPrice": 7419.08,
-          "lowPrice": 7323.85,
-          "lastPrice": 7357.49,
-          "priceChange": -0.73,
-          "percentChange": -9.9208776e-05,
-          "volume": 0
-        }
-      },
-      {
-        "tradeTime": "06/24/2026",
-        "openPrice": "7,373.70",
-        "highPrice": "7,428.06",
-        "lowPrice": "7,336.82",
-        "lastPrice": "7,358.22",
-        "priceChange": "-7.24",
-        "percentChange": "-0.10%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-24",
-          "openPrice": 7373.7,
-          "highPrice": 7428.06,
-          "lowPrice": 7336.82,
-          "lastPrice": 7358.22,
-          "priceChange": -7.24,
-          "percentChange": -0.000982966441,
-          "volume": 0
-        }
-      },
-      {
-        "tradeTime": "06/23/2026",
-        "openPrice": "7,356.44",
-        "highPrice": "7,422.39",
-        "lowPrice": "7,348.11",
-        "lastPrice": "7,365.46",
-        "priceChange": "-107.33",
-        "percentChange": "-1.44%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-23",
-          "openPrice": 7356.44,
-          "highPrice": 7422.39,
-          "lowPrice": 7348.11,
-          "lastPrice": 7365.46,
-          "priceChange": -107.33,
-          "percentChange": -0.014362774814,
-          "volume": 0
-        }
-      },
-      {
-        "tradeTime": "06/22/2026",
-        "openPrice": "7,502.73",
-        "highPrice": "7,529.57",
-        "lowPrice": "7,460.01",
-        "lastPrice": "7,472.79",
-        "priceChange": "-27.79",
-        "percentChange": "-0.37%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-22",
-          "openPrice": 7502.73,
-          "highPrice": 7529.57,
-          "lowPrice": 7460.01,
-          "lastPrice": 7472.79,
-          "priceChange": -27.79,
-          "percentChange": -0.00370504681,
-          "volume": 0
-        }
-      }
+    "high": [
+      "1,691.00",
+      "1,803.00",
+      "1,715.00"
     ]
   },
-  {
-    "symbol": "$SPX",
-    "ua": "minimal",
-    "get_status": 200,
-    "cookies": [
-      "XSRF-TOKEN",
-      "laravel_session",
-      "laravel_token",
-      "market"
+  "B_simple_lim65": {
+    "status": 200,
+    "n": 64,
+    "last": [
+      "1,691.00",
+      "1,523.00",
+      "1,477.00"
     ],
-    "api_status": 200,
-    "api_len": 1803,
-    "rows": [
-      {
-        "tradeTime": "06/26/2026",
-        "openPrice": "7,312.74",
-        "highPrice": "7,369.91",
-        "lowPrice": "7,294.18",
-        "lastPrice": "7,357.98",
-        "priceChange": "+0.49",
-        "percentChange": "+0.01%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-26",
-          "openPrice": 7312.74,
-          "highPrice": 7369.91,
-          "lowPrice": 7294.18,
-          "lastPrice": 7357.98,
-          "priceChange": 0.49,
-          "percentChange": 6.6598799e-05,
-          "volume": 0
-        }
-      },
-      {
-        "tradeTime": "06/25/2026",
-        "openPrice": "7,419.08",
-        "highPrice": "7,419.08",
-        "lowPrice": "7,323.85",
-        "lastPrice": "7,357.49",
-        "priceChange": "-0.73",
-        "percentChange": "-0.01%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-25",
-          "openPrice": 7419.08,
-          "highPrice": 7419.08,
-          "lowPrice": 7323.85,
-          "lastPrice": 7357.49,
-          "priceChange": -0.73,
-          "percentChange": -9.9208776e-05,
-          "volume": 0
-        }
-      },
-      {
-        "tradeTime": "06/24/2026",
-        "openPrice": "7,373.70",
-        "highPrice": "7,428.06",
-        "lowPrice": "7,336.82",
-        "lastPrice": "7,358.22",
-        "priceChange": "-7.24",
-        "percentChange": "-0.10%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-24",
-          "openPrice": 7373.7,
-          "highPrice": 7428.06,
-          "lowPrice": 7336.82,
-          "lastPrice": 7358.22,
-          "priceChange": -7.24,
-          "percentChange": -0.000982966441,
-          "volume": 0
-        }
-      },
-      {
-        "tradeTime": "06/23/2026",
-        "openPrice": "7,356.44",
-        "highPrice": "7,422.39",
-        "lowPrice": "7,348.11",
-        "lastPrice": "7,365.46",
-        "priceChange": "-107.33",
-        "percentChange": "-1.44%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-23",
-          "openPrice": 7356.44,
-          "highPrice": 7422.39,
-          "lowPrice": 7348.11,
-          "lastPrice": 7365.46,
-          "priceChange": -107.33,
-          "percentChange": -0.014362774814,
-          "volume": 0
-        }
-      },
-      {
-        "tradeTime": "06/22/2026",
-        "openPrice": "7,502.73",
-        "highPrice": "7,529.57",
-        "lowPrice": "7,460.01",
-        "lastPrice": "7,472.79",
-        "priceChange": "-27.79",
-        "percentChange": "-0.37%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-22",
-          "openPrice": 7502.73,
-          "highPrice": 7529.57,
-          "lowPrice": 7460.01,
-          "lastPrice": 7472.79,
-          "priceChange": -27.79,
-          "percentChange": -0.00370504681,
-          "volume": 0
-        }
-      }
+    "high": [
+      "1,691.00",
+      "1,803.00",
+      "1,715.00"
     ]
   },
-  {
-    "symbol": "$SPX",
-    "ua": "modern_chrome",
-    "get_status": 200,
-    "cookies": [
-      "XSRF-TOKEN",
-      "laravel_session",
-      "laravel_token",
-      "market"
+  "C_simple_lim120": {
+    "status": 200,
+    "n": 119,
+    "last": [
+      "1,691.00",
+      "1,523.00",
+      "1,477.00"
     ],
-    "api_status": 200,
-    "api_len": 1803,
-    "rows": [
-      {
-        "tradeTime": "06/26/2026",
-        "openPrice": "7,312.74",
-        "highPrice": "7,369.91",
-        "lowPrice": "7,294.18",
-        "lastPrice": "7,357.98",
-        "priceChange": "+0.49",
-        "percentChange": "+0.01%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-26",
-          "openPrice": 7312.74,
-          "highPrice": 7369.91,
-          "lowPrice": 7294.18,
-          "lastPrice": 7357.98,
-          "priceChange": 0.49,
-          "percentChange": 6.6598799e-05,
-          "volume": 0
-        }
-      },
-      {
-        "tradeTime": "06/25/2026",
-        "openPrice": "7,419.08",
-        "highPrice": "7,419.08",
-        "lowPrice": "7,323.85",
-        "lastPrice": "7,357.49",
-        "priceChange": "-0.73",
-        "percentChange": "-0.01%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-25",
-          "openPrice": 7419.08,
-          "highPrice": 7419.08,
-          "lowPrice": 7323.85,
-          "lastPrice": 7357.49,
-          "priceChange": -0.73,
-          "percentChange": -9.9208776e-05,
-          "volume": 0
-        }
-      },
-      {
-        "tradeTime": "06/24/2026",
-        "openPrice": "7,373.70",
-        "highPrice": "7,428.06",
-        "lowPrice": "7,336.82",
-        "lastPrice": "7,358.22",
-        "priceChange": "-7.24",
-        "percentChange": "-0.10%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-24",
-          "openPrice": 7373.7,
-          "highPrice": 7428.06,
-          "lowPrice": 7336.82,
-          "lastPrice": 7358.22,
-          "priceChange": -7.24,
-          "percentChange": -0.000982966441,
-          "volume": 0
-        }
-      },
-      {
-        "tradeTime": "06/23/2026",
-        "openPrice": "7,356.44",
-        "highPrice": "7,422.39",
-        "lowPrice": "7,348.11",
-        "lastPrice": "7,365.46",
-        "priceChange": "-107.33",
-        "percentChange": "-1.44%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-23",
-          "openPrice": 7356.44,
-          "highPrice": 7422.39,
-          "lowPrice": 7348.11,
-          "lastPrice": 7365.46,
-          "priceChange": -107.33,
-          "percentChange": -0.014362774814,
-          "volume": 0
-        }
-      },
-      {
-        "tradeTime": "06/22/2026",
-        "openPrice": "7,502.73",
-        "highPrice": "7,529.57",
-        "lowPrice": "7,460.01",
-        "lastPrice": "7,472.79",
-        "priceChange": "-27.79",
-        "percentChange": "-0.37%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-22",
-          "openPrice": 7502.73,
-          "highPrice": 7529.57,
-          "lowPrice": 7460.01,
-          "lastPrice": 7472.79,
-          "priceChange": -27.79,
-          "percentChange": -0.00370504681,
-          "volume": 0
-        }
-      }
+    "high": [
+      "1,691.00",
+      "1,803.00",
+      "1,715.00"
     ]
   },
-  {
-    "symbol": "$NSHU",
-    "ua": "old_chrome",
-    "get_status": 200,
-    "cookies": [
-      "XSRF-TOKEN",
-      "laravel_session",
-      "laravel_token",
-      "market"
+  "D_fullheaders_lim6": {
+    "status": 200,
+    "n": 5,
+    "last": [
+      "1,691.00",
+      "1,523.00",
+      "1,477.00"
     ],
-    "api_status": 200,
-    "api_len": 1690,
-    "rows": [
-      {
-        "tradeTime": "06/26/2026",
-        "openPrice": "7.00",
-        "highPrice": "1,673.00",
-        "lowPrice": "7.00",
-        "lastPrice": "1,659.00",
-        "priceChange": "+136.00",
-        "percentChange": "+8.93%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-26",
-          "openPrice": 7,
-          "highPrice": 1673,
-          "lowPrice": 7,
-          "lastPrice": 1659,
-          "priceChange": 136,
-          "percentChange": 0.089297439265,
-          "volume": 0
-        }
-      },
-      {
-        "tradeTime": "06/25/2026",
-        "openPrice": "32.00",
-        "highPrice": "1,803.00",
-        "lowPrice": "32.00",
-        "lastPrice": "1,523.00",
-        "priceChange": "+46.00",
-        "percentChange": "+3.11%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-25",
-          "openPrice": 32,
-          "highPrice": 1803,
-          "lowPrice": 32,
-          "lastPrice": 1523,
-          "priceChange": 46,
-          "percentChange": 0.031144211239,
-          "volume": 0
-        }
-      },
-      {
-        "tradeTime": "06/24/2026",
-        "openPrice": "27.00",
-        "highPrice": "1,715.00",
-        "lowPrice": "27.00",
-        "lastPrice": "1,477.00",
-        "priceChange": "+70.00",
-        "percentChange": "+4.98%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-24",
-          "openPrice": 27,
-          "highPrice": 1715,
-          "lowPrice": 27,
-          "lastPrice": 1477,
-          "priceChange": 70,
-          "percentChange": 0.049751243781,
-          "volume": 0
-        }
-      },
-      {
-        "tradeTime": "06/23/2026",
-        "openPrice": "129.00",
-        "highPrice": "1,541.00",
-        "lowPrice": "129.00",
-        "lastPrice": "1,407.00",
-        "priceChange": "+276.00",
-        "percentChange": "+24.40%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-23",
-          "openPrice": 129,
-          "highPrice": 1541,
-          "lowPrice": 129,
-          "lastPrice": 1407,
-          "priceChange": 276,
-          "percentChange": 0.244031830239,
-          "volume": 0
-        }
-      },
-      {
-        "tradeTime": "06/22/2026",
-        "openPrice": "16.00",
-        "highPrice": "1,350.00",
-        "lowPrice": "16.00",
-        "lastPrice": "1,131.00",
-        "priceChange": "-656.00",
-        "percentChange": "-36.71%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-22",
-          "openPrice": 16,
-          "highPrice": 1350,
-          "lowPrice": 16,
-          "lastPrice": 1131,
-          "priceChange": -656,
-          "percentChange": -0.367095691102,
-          "volume": 0
-        }
-      }
+    "high": [
+      "1,691.00",
+      "1,803.00",
+      "1,715.00"
     ]
   },
-  {
-    "symbol": "$NSHU",
-    "ua": "minimal",
-    "get_status": 200,
-    "cookies": [
-      "XSRF-TOKEN",
-      "laravel_session",
-      "laravel_token",
-      "market"
+  "E_pipeline_full_lim120": {
+    "status": 200,
+    "n": 119,
+    "last": [
+      "1,691.00",
+      "1,523.00",
+      "1,477.00"
     ],
-    "api_status": 200,
-    "api_len": 1690,
-    "rows": [
-      {
-        "tradeTime": "06/26/2026",
-        "openPrice": "7.00",
-        "highPrice": "1,673.00",
-        "lowPrice": "7.00",
-        "lastPrice": "1,659.00",
-        "priceChange": "+136.00",
-        "percentChange": "+8.93%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-26",
-          "openPrice": 7,
-          "highPrice": 1673,
-          "lowPrice": 7,
-          "lastPrice": 1659,
-          "priceChange": 136,
-          "percentChange": 0.089297439265,
-          "volume": 0
-        }
-      },
-      {
-        "tradeTime": "06/25/2026",
-        "openPrice": "32.00",
-        "highPrice": "1,803.00",
-        "lowPrice": "32.00",
-        "lastPrice": "1,523.00",
-        "priceChange": "+46.00",
-        "percentChange": "+3.11%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-25",
-          "openPrice": 32,
-          "highPrice": 1803,
-          "lowPrice": 32,
-          "lastPrice": 1523,
-          "priceChange": 46,
-          "percentChange": 0.031144211239,
-          "volume": 0
-        }
-      },
-      {
-        "tradeTime": "06/24/2026",
-        "openPrice": "27.00",
-        "highPrice": "1,715.00",
-        "lowPrice": "27.00",
-        "lastPrice": "1,477.00",
-        "priceChange": "+70.00",
-        "percentChange": "+4.98%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-24",
-          "openPrice": 27,
-          "highPrice": 1715,
-          "lowPrice": 27,
-          "lastPrice": 1477,
-          "priceChange": 70,
-          "percentChange": 0.049751243781,
-          "volume": 0
-        }
-      },
-      {
-        "tradeTime": "06/23/2026",
-        "openPrice": "129.00",
-        "highPrice": "1,541.00",
-        "lowPrice": "129.00",
-        "lastPrice": "1,407.00",
-        "priceChange": "+276.00",
-        "percentChange": "+24.40%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-23",
-          "openPrice": 129,
-          "highPrice": 1541,
-          "lowPrice": 129,
-          "lastPrice": 1407,
-          "priceChange": 276,
-          "percentChange": 0.244031830239,
-          "volume": 0
-        }
-      },
-      {
-        "tradeTime": "06/22/2026",
-        "openPrice": "16.00",
-        "highPrice": "1,350.00",
-        "lowPrice": "16.00",
-        "lastPrice": "1,131.00",
-        "priceChange": "-656.00",
-        "percentChange": "-36.71%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-22",
-          "openPrice": 16,
-          "highPrice": 1350,
-          "lowPrice": 16,
-          "lastPrice": 1131,
-          "priceChange": -656,
-          "percentChange": -0.367095691102,
-          "volume": 0
-        }
-      }
+    "high": [
+      "1,691.00",
+      "1,803.00",
+      "1,715.00"
     ]
   },
-  {
-    "symbol": "$NSHU",
-    "ua": "modern_chrome",
-    "get_status": 200,
-    "cookies": [
-      "XSRF-TOKEN",
-      "laravel_session",
-      "laravel_token",
-      "market"
+  "F_after_burst15_lim6": {
+    "status": 200,
+    "n": 5,
+    "last": [
+      "1,691.00",
+      "1,523.00",
+      "1,477.00"
     ],
-    "api_status": 200,
-    "api_len": 1690,
-    "rows": [
-      {
-        "tradeTime": "06/26/2026",
-        "openPrice": "7.00",
-        "highPrice": "1,673.00",
-        "lowPrice": "7.00",
-        "lastPrice": "1,659.00",
-        "priceChange": "+136.00",
-        "percentChange": "+8.93%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-26",
-          "openPrice": 7,
-          "highPrice": 1673,
-          "lowPrice": 7,
-          "lastPrice": 1659,
-          "priceChange": 136,
-          "percentChange": 0.089297439265,
-          "volume": 0
-        }
-      },
-      {
-        "tradeTime": "06/25/2026",
-        "openPrice": "32.00",
-        "highPrice": "1,803.00",
-        "lowPrice": "32.00",
-        "lastPrice": "1,523.00",
-        "priceChange": "+46.00",
-        "percentChange": "+3.11%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-25",
-          "openPrice": 32,
-          "highPrice": 1803,
-          "lowPrice": 32,
-          "lastPrice": 1523,
-          "priceChange": 46,
-          "percentChange": 0.031144211239,
-          "volume": 0
-        }
-      },
-      {
-        "tradeTime": "06/24/2026",
-        "openPrice": "27.00",
-        "highPrice": "1,715.00",
-        "lowPrice": "27.00",
-        "lastPrice": "1,477.00",
-        "priceChange": "+70.00",
-        "percentChange": "+4.98%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-24",
-          "openPrice": 27,
-          "highPrice": 1715,
-          "lowPrice": 27,
-          "lastPrice": 1477,
-          "priceChange": 70,
-          "percentChange": 0.049751243781,
-          "volume": 0
-        }
-      },
-      {
-        "tradeTime": "06/23/2026",
-        "openPrice": "129.00",
-        "highPrice": "1,541.00",
-        "lowPrice": "129.00",
-        "lastPrice": "1,407.00",
-        "priceChange": "+276.00",
-        "percentChange": "+24.40%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-23",
-          "openPrice": 129,
-          "highPrice": 1541,
-          "lowPrice": 129,
-          "lastPrice": 1407,
-          "priceChange": 276,
-          "percentChange": 0.244031830239,
-          "volume": 0
-        }
-      },
-      {
-        "tradeTime": "06/22/2026",
-        "openPrice": "16.00",
-        "highPrice": "1,350.00",
-        "lowPrice": "16.00",
-        "lastPrice": "1,131.00",
-        "priceChange": "-656.00",
-        "percentChange": "-36.71%",
-        "volume": "0",
-        "raw": {
-          "tradeTime": "2026-06-22",
-          "openPrice": 16,
-          "highPrice": 1350,
-          "lowPrice": 16,
-          "lastPrice": 1131,
-          "priceChange": -656,
-          "percentChange": -0.367095691102,
-          "volume": 0
-        }
-      }
+    "high": [
+      "1,691.00",
+      "1,803.00",
+      "1,715.00"
     ]
   }
-]
+}

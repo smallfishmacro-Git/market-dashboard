@@ -145,7 +145,7 @@ def update_symbol(symbol, filename, session, log_fn=print):
     }
     payload = {
         "symbol": symbol,
-        "fields": "tradeTime.format(m/d/Y),openPrice,highPrice,lowPrice,lastPrice,priceChange,percentChange,volume,openInterest,impliedVolatility,symbolCode,symbolType",
+        "fields": "tradeTime.format(m/d/Y),openPrice,highPrice,lowPrice,lastPrice,priceChange,percentChange,volume,symbolCode,symbolType",
         "type": "eod",
         "orderBy": "tradeTime",
         "orderDir": "desc",

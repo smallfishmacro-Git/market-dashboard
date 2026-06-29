@@ -167,14 +167,35 @@ def update_symbol(symbol, filename, session, log_fn=print):
         log_fn(f"  ⚠️  No data returned for {symbol}")
         return False
 
-    # [DIAG] temporary — log what the breadth symbols actually fetched so we can
-    # confirm the running code uses the new fields and whether the API returned a
-    # real lastPrice in this environment. Remove after diagnosis.
+    # [DIAG] temporary — log what the breadth symbols actually fetched, and for
+    # $NSHU dump the pipeline's (shared-session) response side-by-side with a
+    # fresh-session probe-style refetch so we can see, in the same run, whether
+    # the degraded settled OHLC comes from the shared session or the environment.
     if filename in RECONSTRUCT_FROM_CHANGE:
         _r0 = data["data"][0]
         _lp = _r0.get("lastPrice") if isinstance(_r0, dict) else None
         log_fn(f"  [DIAG] {symbol}: fields_has_openInterest={'openInterest' in payload['fields']} "
                f"latest_lastPrice={_lp!r} n_rows={len(data['data'])}")
+        if symbol == "$NSHU":
+            import json as _json
+            _pipeline_resp = data["data"][:15]
+            try:
+                _s = requests.Session()
+                _s.get(get_url, headers=get_headers, timeout=15)
+                _ah = {
+                    "accept": "application/json",
+                    "user-agent": api_headers["user-agent"],
+                    "x-xsrf-token": unquote(unquote(_s.cookies.get_dict().get("XSRF-TOKEN", ""))),
+                }
+                _r = _s.get(api_url, params=payload, headers=_ah, timeout=15)
+                _probe_resp = _r.json().get("data", [])[:15]
+            except Exception as _e:
+                _probe_resp = [{"error": repr(_e)}]
+            _dump_path = os.path.join(BASE_DIR, "data", "datasets", "_diag_nshu_raw.json")
+            with open(_dump_path, "w") as _f:
+                _json.dump({"pipeline_shared_session": _pipeline_resp,
+                            "fresh_session_probe": _probe_resp}, _f)
+            log_fn(f"  [DIAG] wrote $NSHU shared-vs-fresh comparison -> {_dump_path}")
 
     # Step 3: Process new data
     df1 = pd.DataFrame(data["data"])

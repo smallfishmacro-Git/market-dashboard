@@ -208,9 +208,15 @@ def update_symbol(symbol, filename, session, log_fn=print):
 
     for col in ["Open", "High", "Low", "Last"]:
         if col in df1.columns:
-            if df1[col].dtype == object:
-                df1[col] = df1[col].str.replace(",", "", regex=False).str.strip()
-            df1[col] = pd.to_numeric(df1[col], errors="coerce")
+            # pandas >=3 infers a string dtype (not ``object``) for these columns,
+            # so the old ``== object`` guard silently skipped comma-stripping and
+            # every value with a thousands separator (the breadth counts/volumes,
+            # which run into the 1,000s) failed to_numeric -> NaN. Strip commas
+            # unconditionally (same pattern fix_spx_ohlc.py already uses).
+            df1[col] = pd.to_numeric(
+                df1[col].astype(str).str.replace(",", "", regex=False).str.strip(),
+                errors="coerce",
+            )
 
     # Drop rows where ALL OHLC values are missing (Barchart bug workaround)
     ohlc_check = [c for c in ['Open','High','Low','Last'] if c in df1.columns]

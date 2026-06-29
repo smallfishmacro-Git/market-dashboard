@@ -138,7 +138,15 @@ def update_symbol(symbol, filename, session, log_fn=print):
     api_url = "https://www.barchart.com/proxies/core-api/v1/historical/get"
     api_headers = {
         "accept": "application/json",
-        "accept-encoding": "gzip, deflate, br",
+        # Barchart's CDN keys its cache on Accept-Encoding. For the breadth
+        # internals ($NSHU/$NSHD/$QSHU/...), the 'br' variant serves a stale
+        # response with null settled OHLC while the gzip variant is fresh
+        # (verified: the identical request without 'br' returns full data).
+        # Offer only gzip/deflate for these symbols to hit the fresh variant.
+        "accept-encoding": (
+            "gzip, deflate" if filename in RECONSTRUCT_FROM_CHANGE
+            else "gzip, deflate, br"
+        ),
         "accept-language": "en-US,en;q=0.9",
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.85 Safari/537.36",
         "x-xsrf-token": unquote(unquote(session.cookies.get_dict().get("XSRF-TOKEN", ""))),

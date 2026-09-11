@@ -9,3 +9,4 @@ fredapi
 hmmlearn
 p123api
 exchange_calendars
+curl_cffi

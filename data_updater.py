@@ -13,6 +13,14 @@ import io
 import os
 import sys
 import requests  # type: ignore[import-untyped]
+import json
+import time
+try:
+    # Chrome TLS/HTTP2 fingerprint for Barchart. Plain python-requests fetches
+    # began failing on GitHub Actions on 2026-08-28 (all symbols frozen at 08-27).
+    from curl_cffi import requests as cffi_requests  # type: ignore[import-untyped]
+except ImportError:  # local / Streamlit runs without curl_cffi fall back to requests
+    cffi_requests = None
 import pandas as pd
 from datetime import datetime, timedelta
 from urllib.parse import unquote
@@ -94,6 +102,74 @@ SYMBOLS = [
     ("VI*1",      "VIX_Front_Month_Futures_VI1.csv"),
     ("VI*2",      "VIX_Second_Month_Futures_VI2.csv"),
 ]
+
+# ── Barchart HTTP session (impersonation + failure capture) ─────────────────────
+DIAG = os.path.join(BASE_DIR, "data", "diag")
+
+
+class _BarchartSession:
+    """Drop-in for requests.Session used by update_symbol / update_futures_symbol.
+
+    - Impersonates Chrome via curl_cffi when installed (falls back to requests).
+    - Drops the hard-coded user-agent so it can't contradict the impersonated one.
+    - Records non-200 / non-JSON Barchart responses (and network errors) so the
+      cause of a failure lands in data/diag/barchart_diag.json - readable from
+      the public repo without Actions log access.
+    """
+
+    def __init__(self):
+        if cffi_requests is not None:
+            self._s = cffi_requests.Session(impersonate="chrome")
+            self.backend = "curl_cffi/chrome"
+        else:
+            self._s = requests.Session()
+            self.backend = "requests"
+        self.cookies = self._s.cookies
+        self.failures = []
+
+    def _record(self, entry):
+        if len(self.failures) < 8:
+            self.failures.append(entry)
+
+    def get(self, url, headers=None, **kw):
+        h = dict(headers or {})
+        if cffi_requests is not None:
+            h.pop("user-agent", None)
+        symbol = (kw.get("params") or {}).get("symbol")
+        try:
+            r = self._s.get(url, headers=h, **kw)
+        except Exception as e:
+            self._record({"url": url.split("?")[0], "symbol": symbol,
+                          "error": f"{type(e).__name__}: {e}"[:300]})
+            raise
+        ctype = (r.headers.get("content-type") or "").lower()
+        if r.status_code != 200 or ("/proxies/" in url and "json" not in ctype):
+            self._record({
+                "url": url.split("?")[0],
+                "symbol": symbol,
+                "status": r.status_code,
+                "content_type": ctype,
+                "server": r.headers.get("server"),
+                "cf_ray": r.headers.get("cf-ray"),
+                "cookies_seen": sorted(self.cookies.get_dict().keys()),
+                "body_head": r.text[:400],
+            })
+        return r
+
+
+def _write_barchart_diag(session, ok, total, log_fn=print):
+    os.makedirs(DIAG, exist_ok=True)
+    out = {
+        "run_utc": time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()),
+        "backend": session.backend,
+        "symbols_ok": ok,
+        "symbols_total": total,
+        "failures_sample": session.failures,
+    }
+    with open(os.path.join(DIAG, "barchart_diag.json"), "w", encoding="utf-8") as f:
+        json.dump(out, f, indent=2)
+    log_fn(f"  Barchart: {ok}/{total} symbols OK via {session.backend}")
+
 
 # ── Core Barchart update function ───────────────────────────────────────────────
 def update_symbol(symbol, filename, session, log_fn=print):
@@ -727,7 +803,7 @@ def run_update(log_fn=print):
     log_fn(f"Update started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     log_fn("=" * 60)
 
-    session = requests.Session()
+    session = _BarchartSession()
     success = 0
     failed  = 0
 
@@ -757,6 +833,11 @@ def run_update(log_fn=print):
         except Exception as e:
             log_fn(f"  ❌ {symbol} — ERROR: {e}")
             failed += 1
+
+    try:
+        _write_barchart_diag(session, success, len(SYMBOLS) + len(FUTURES_SYMBOLS), log_fn)
+    except Exception as e:
+        log_fn(f"  ⚠️  Barchart diag write failed: {e}")
 
     # CNN Fear & Greed
     try:

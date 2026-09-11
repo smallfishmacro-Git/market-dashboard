@@ -68,7 +68,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/barchart/*.csv data/datasets/*.csv data/datasets/*.json
+          git add data/barchart/*.csv data/datasets/*.csv data/datasets/*.json data/diag/*.json
           git diff --staged --quiet || git commit -m "chore: data update $(date -u +%Y-%m-%d_%H:%M)"
           git push
 
@@ -78,4 +78,6 @@ jobs:
       # fresh. The run still goes red on mismatch so the staleness is visible.
       - name: Check data freshness (alarm — red if any dataset is stale)
         if: always()
+        env:
+          BARCHART_STALE_FAIL: "1"   # stale Barchart symbols turn the run red (post-commit, never blocks publishing)
         run: python check_freshness.py

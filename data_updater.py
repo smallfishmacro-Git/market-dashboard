@@ -157,6 +157,20 @@ class _BarchartSession:
         return r
 
 
+def _make_barchart_session(log_fn=print):
+    """Headless Chromium first (passes Barchart's AWS WAF JS challenge, live since
+    2026-08-28); falls back to the curl_cffi/requests session when Playwright
+    isn't installed (e.g. local Streamlit runs)."""
+    try:
+        from barchart_browser import BrowserBarchartSession
+        s = BrowserBarchartSession()
+        log_fn(f"  Barchart: browser warm-up {'OK' if s.ready else 'FAILED (see data/diag)'}")
+        return s
+    except Exception as e:
+        log_fn(f"  ⚠️  Barchart browser session unavailable ({type(e).__name__}: {e}) - using HTTP session")
+        return _BarchartSession()
+
+
 def _write_barchart_diag(session, ok, total, log_fn=print):
     os.makedirs(DIAG, exist_ok=True)
     out = {
@@ -803,7 +817,7 @@ def run_update(log_fn=print):
     log_fn(f"Update started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     log_fn("=" * 60)
 
-    session = _BarchartSession()
+    session = _make_barchart_session(log_fn)
     success = 0
     failed  = 0
 
@@ -836,6 +850,8 @@ def run_update(log_fn=print):
 
     try:
         _write_barchart_diag(session, success, len(SYMBOLS) + len(FUTURES_SYMBOLS), log_fn)
+        if hasattr(session, "close"):
+            session.close()
     except Exception as e:
         log_fn(f"  ⚠️  Barchart diag write failed: {e}")
 

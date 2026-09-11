@@ -36,6 +36,9 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Install headless Chromium (Barchart AWS WAF challenge)
+        run: python -m playwright install --with-deps chromium
+
       - name: Fix SPX OHLC (yfinance fallback)
         run: python fix_spx_ohlc.py
 

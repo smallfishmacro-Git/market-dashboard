@@ -1,0 +1,88 @@
+{
+  "run_utc": "2026-09-11 13:13:31",
+  "backend": "curl_cffi/chrome",
+  "symbols_ok": 0,
+  "symbols_total": 54,
+  "failures_sample": [
+    {
+      "url": "https://www.barchart.com/stocks/quotes/$MMFD/price-history/",
+      "symbol": null,
+      "status": 202,
+      "content_type": "text/html; charset=utf-8",
+      "server": "CloudFront",
+      "cf_ray": null,
+      "cookies_seen": [],
+      "body_head": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <title></title>\n    <style>\n        body {\n            font-family: \"Arial\";\n        }\n    </style>\n    <script type=\"text/javascript\">\n    window.awsWafCookieDomainList = ['barchart.com'];\n    window.gokuProps = {\n\"key\":\"AQIDAHjcYu/GjX+QlghicBgQ/7bFaQZ+m5"
+    },
+    {
+      "url": "https://www.barchart.com/proxies/core-api/v1/historical/get",
+      "symbol": "$MMFD",
+      "status": 403,
+      "content_type": "application/json",
+      "server": "nginx",
+      "cf_ray": null,
+      "cookies_seen": [],
+      "body_head": "{\"error\":\"Forbidden\"}"
+    },
+    {
+      "url": "https://www.barchart.com/stocks/quotes/$R3FD/price-history/",
+      "symbol": null,
+      "status": 202,
+      "content_type": "text/html; charset=utf-8",
+      "server": "CloudFront",
+      "cf_ray": null,
+      "cookies_seen": [],
+      "body_head": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <title></title>\n    <style>\n        body {\n            font-family: \"Arial\";\n        }\n    </style>\n    <script type=\"text/javascript\">\n    window.awsWafCookieDomainList = ['barchart.com'];\n    window.gokuProps = {\n\"key\":\"AQIDAHjcYu/GjX+QlghicBgQ/7bFaQZ+m5"
+    },
+    {
+      "url": "https://www.barchart.com/proxies/core-api/v1/historical/get",
+      "symbol": "$R3FD",
+      "status": 403,
+      "content_type": "application/json",
+      "server": "nginx",
+      "cf_ray": null,
+      "cookies_seen": [],
+      "body_head": "{\"error\":\"Forbidden\"}"
+    },
+    {
+      "url": "https://www.barchart.com/stocks/quotes/$MMTW/price-history/",
+      "symbol": null,
+      "status": 202,
+      "content_type": "text/html; charset=utf-8",
+      "server": "CloudFront",
+      "cf_ray": null,
+      "cookies_seen": [],
+      "body_head": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <title></title>\n    <style>\n        body {\n            font-family: \"Arial\";\n        }\n    </style>\n    <script type=\"text/javascript\">\n    window.awsWafCookieDomainList = ['barchart.com'];\n    window.gokuProps = {\n\"key\":\"AQIDAHjcYu/GjX+QlghicBgQ/7bFaQZ+m5"
+    },
+    {
+      "url": "https://www.barchart.com/proxies/core-api/v1/historical/get",
+      "symbol": "$MMTW",
+      "status": 403,
+      "content_type": "application/json",
+      "server": "nginx",
+      "cf_ray": null,
+      "cookies_seen": [],
+      "body_head": "{\"error\":\"Forbidden\"}"
+    },
+    {
+      "url": "https://www.barchart.com/stocks/quotes/$MMFI/price-history/",
+      "symbol": null,
+      "status": 202,
+      "content_type": "text/html; charset=utf-8",
+      "server": "CloudFront",
+      "cf_ray": null,
+      "cookies_seen": [],
+      "body_head": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <title></title>\n    <style>\n        body {\n            font-family: \"Arial\";\n        }\n    </style>\n    <script type=\"text/javascript\">\n    window.awsWafCookieDomainList = ['barchart.com'];\n    window.gokuProps = {\n\"key\":\"AQIDAHjcYu/GjX+QlghicBgQ/7bFaQZ+m5"
+    },
+    {
+      "url": "https://www.barchart.com/proxies/core-api/v1/historical/get",
+      "symbol": "$MMFI",
+      "status": 403,
+      "content_type": "application/json",
+      "server": "nginx",
+      "cf_ray": null,
+      "cookies_seen": [],
+      "body_head": "{\"error\":\"Forbidden\"}"
+    }
+  ]
+}

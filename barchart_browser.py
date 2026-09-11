@@ -25,6 +25,7 @@ from urllib.parse import unquote, urlencode
 BARCHART_ORIGIN = "https://www.barchart.com"
 WARMUP_URL = f"{BARCHART_ORIGIN}/stocks/quotes/%24SPX/price-history/historical"
 TOKEN_COOKIE = "XSRF-TOKEN"
+READY_COOKIE = "aws-waf-token"  # Barchart no longer sets XSRF-TOKEN; the WAF token is the readiness signal
 
 _FETCH_JS = """
 async ([url, xsrf, timeoutMs]) => {
@@ -111,7 +112,7 @@ class BrowserBarchartSession:
 
         deadline = time.time() + self._warmup_timeout_s
         while time.time() < deadline:
-            if self._token_cookie in self.cookies.get_dict():
+            if READY_COOKIE in self.cookies.get_dict():
                 return True
             self.page.wait_for_timeout(1000)
 

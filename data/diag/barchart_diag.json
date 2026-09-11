@@ -1,49 +1,7 @@
 {
-  "run_utc": "2026-09-11 13:28:32",
+  "run_utc": "2026-09-11 17:53:06",
   "backend": "playwright/chromium",
   "symbols_ok": 52,
   "symbols_total": 54,
-  "failures_sample": [
-    {
-      "stage": "warmup",
-      "url": "https://www.barchart.com/stocks/quotes/$SPX/price-history/historical",
-      "title": "S&P 500 Index Price History - Barchart.com",
-      "cookies_seen": [
-        "33acrossId",
-        "33acrossIdTp",
-        "33acrossId_cst",
-        "33acrossId_last",
-        "CookieConsent",
-        "__eoi",
-        "__gads",
-        "__gpi",
-        "_ap_pid",
-        "_ap_sid",
-        "_au_1d",
-        "_cc_id",
-        "_ga",
-        "_ga_PE0FK9V6VN",
-        "_gcl_au",
-        "_pc_apid",
-        "_pubcid",
-        "_pubcid_cst",
-        "ab.storage.deviceId.bf243db8-6e0e-43fa-9ce4-2afc85959789",
-        "ab.storage.sessionId.bf243db8-6e0e-43fa-9ce4-2afc85959789",
-        "aws-waf-token",
-        "bcFreeUserPageView",
-        "bc_anon",
-        "connectId",
-        "cto_bundle",
-        "g_state",
-        "idw-fe-id",
-        "laravel_session",
-        "panoramaId",
-        "panoramaIdType",
-        "panoramaId_expiry",
-        "unifiedid",
-        "unifiedid_cst"
-      ],
-      "body_head": "<!DOCTYPE html><html itemscope=\"\" itemtype=\"http://schema.org/WebPage\" lang=\"en\"><head><script async=\"\" src=\"https://cdn.hadronid.net/hadron.js?partner_id=784&amp;sync=1&amp;url=https%3A%2F%2Fwww.barchart.com%2Fstocks%2Fquotes%2F%24SPX%2Fprice-history%2Fhistorical\"></script><script src=\"https://cdn.hadronid.net/hadron.js?url=https%3A%2F%2Fwww.barchart.com%2Fstocks%2Fquotes%2F%24SPX%2Fprice-history"
-    }
-  ]
+  "failures_sample": []
 }

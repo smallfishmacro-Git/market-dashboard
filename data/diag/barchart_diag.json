@@ -1,13 +1,7 @@
 {
-  "run_utc": "2026-09-24 09:22:21",
+  "run_utc": "2026-09-24 18:38:38",
   "backend": "playwright/chromium",
-  "symbols_ok": 51,
+  "symbols_ok": 52,
   "symbols_total": 54,
-  "failures_sample": [
-    {
-      "url": "https://www.barchart.com/proxies/core-api/v1/historical/get",
-      "symbol": "$MMFD",
-      "error": "Error: Page.evaluate: Execution context was destroyed, most likely because of a navigation"
-    }
-  ]
+  "failures_sample": []
 }

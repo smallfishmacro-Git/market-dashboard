@@ -1,5 +1,5 @@
 {
-  "run_utc": "2026-10-06 01:52:44",
+  "run_utc": "2026-10-06 11:21:36",
   "backend": "playwright/chromium",
   "symbols_ok": 52,
   "symbols_total": 54,

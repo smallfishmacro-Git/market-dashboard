@@ -1,12 +1,12 @@
 {
-  "last_updated": "2026-10-05",
+  "last_updated": "2026-10-06",
   "data_range": {
     "start": "2008-01-28",
-    "end": "2026-10-05",
-    "trading_days": 4702
+    "end": "2026-10-06",
+    "trading_days": 4703
   },
   "current_signals": {
-    "date": "2026-10-05",
+    "date": "2026-10-06",
     "part3_rule": {
       "signal": "RISK-ON",
       "signal_value": 1,
@@ -23,20 +23,20 @@
         "VIX3M Mean Rev (12 < VIX3M < 20)": true
       },
       "feature_values": {
-        "VRatio": 1.16,
-        "Contango": 3.92,
-        "Contango Roll": 16.88,
-        "VRP": 7.1,
-        "FVRP": 8.48,
-        "Vol Momentum": 0.28,
-        "VIX": 15.52,
-        "VIX3M": 18.0
+        "VRatio": 1.175,
+        "Contango": 3.25,
+        "Contango Roll": 17.5,
+        "VRP": 6.13,
+        "FVRP": 9.01,
+        "Vol Momentum": 0.71,
+        "VIX": 15.01,
+        "VIX3M": 17.64
       }
     },
     "ml_logreg": {
       "signal": "RISK-ON",
       "signal_value": 1,
-      "probability": 0.3534,
+      "probability": 0.341,
       "threshold": 0.5,
       "target": "\u22655% drawdown in 20 trading days"
     }
@@ -44,27 +44,27 @@
   "performance": {
     "buy_hold": {
       "label": "Buy & Hold",
-      "cagr": 9.92,
-      "volatility": 19.8,
+      "cagr": 9.95,
+      "volatility": 19.79,
       "sharpe": 0.5,
       "max_drawdown": -52.58,
-      "total_return": 484.24
+      "total_return": 487.62
     },
     "part3_rule": {
       "label": "Part 3 Rule",
-      "cagr": 7.87,
+      "cagr": 7.9,
       "volatility": 12.85,
       "sharpe": 0.61,
       "max_drawdown": -30.53,
-      "total_return": 310.79
+      "total_return": 313.16
     },
     "ml_logreg": {
       "label": "ML LogReg (p\u22650.50)",
-      "cagr": 5.03,
+      "cagr": 5.06,
       "volatility": 15.05,
-      "sharpe": 0.33,
+      "sharpe": 0.34,
       "max_drawdown": -52.58,
-      "total_return": 149.68
+      "total_return": 151.13
     }
   },
   "equity_curves": {
@@ -5556,6 +5556,10 @@
       {
         "d": "2026-10-05",
         "v": 5.8424
+      },
+      {
+        "d": "2026-10-06",
+        "v": 5.8762
       }
     ],
     "part3_rule": [
@@ -11046,6 +11050,10 @@
       {
         "d": "2026-10-05",
         "v": 4.1079
+      },
+      {
+        "d": "2026-10-06",
+        "v": 4.1316
       }
     ],
     "ml_logreg": [
@@ -16536,6 +16544,10 @@
       {
         "d": "2026-10-05",
         "v": 2.4968
+      },
+      {
+        "d": "2026-10-06",
+        "v": 2.5113
       }
     ]
   },
@@ -18544,6 +18556,10 @@
       {
         "d": "2026-10-05",
         "v": 1
+      },
+      {
+        "d": "2026-10-06",
+        "v": 1
       }
     ],
     "ml_probability": [
@@ -20545,11 +20561,15 @@
       },
       {
         "d": "2026-10-02",
-        "v": 0.3489
+        "v": 0.3487
       },
       {
         "d": "2026-10-05",
-        "v": 0.3534
+        "v": 0.3533
+      },
+      {
+        "d": "2026-10-06",
+        "v": 0.341
       }
     ]
   },

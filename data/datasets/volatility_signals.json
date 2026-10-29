@@ -1,21 +1,21 @@
 {
-  "last_updated": "2026-10-27",
+  "last_updated": "2026-10-28",
   "data_range": {
     "start": "2008-01-28",
-    "end": "2026-10-27",
-    "trading_days": 4718
+    "end": "2026-10-28",
+    "trading_days": 4719
   },
   "current_signals": {
-    "date": "2026-10-27",
+    "date": "2026-10-28",
     "part3_rule": {
       "signal": "RISK-ON",
       "signal_value": 1,
-      "signals_on": 6,
+      "signals_on": 7,
       "signals_required": 4,
       "individual_signals": {
         "VRatio (VIX3M/VIX > 1)": true,
         "Contango (VX2/VX1-1 > -5%)": true,
-        "Contango Roll (VX2/VIX-1 > 10%)": false,
+        "Contango Roll (VX2/VIX-1 > 10%)": true,
         "VRP (VIX-HV10 > 0)": true,
         "Fast VRP (EMA7-HV5 > 0)": true,
         "Vol Momentum (SMA50-VIX > 0)": false,
@@ -23,20 +23,20 @@
         "VIX3M Mean Rev (12 < VIX3M < 20)": true
       },
       "feature_values": {
-        "VRatio": 1.117,
-        "Contango": 0.61,
-        "Contango Roll": 8.84,
-        "VRP": 5.03,
-        "FVRP": 4.47,
-        "Vol Momentum": -1.47,
-        "VIX": 17.52,
-        "VIX3M": 19.57
+        "VRatio": 1.137,
+        "Contango": 0.64,
+        "Contango Roll": 11.89,
+        "VRP": 5.66,
+        "FVRP": 4.82,
+        "Vol Momentum": -0.84,
+        "VIX": 16.91,
+        "VIX3M": 19.22
       }
     },
     "ml_logreg": {
       "signal": "RISK-ON",
       "signal_value": 1,
-      "probability": 0.4341,
+      "probability": 0.4048,
       "threshold": 0.5,
       "target": "\u22655% drawdown in 20 trading days"
     }
@@ -44,27 +44,27 @@
   "performance": {
     "buy_hold": {
       "label": "Buy & Hold",
-      "cagr": 9.85,
+      "cagr": 9.86,
       "volatility": 19.77,
       "sharpe": 0.5,
       "max_drawdown": -52.58,
-      "total_return": 480.38
+      "total_return": 481.99
     },
     "part3_rule": {
       "label": "Part 3 Rule",
-      "cagr": 7.8,
+      "cagr": 7.82,
       "volatility": 12.84,
       "sharpe": 0.61,
       "max_drawdown": -30.53,
-      "total_return": 308.07
+      "total_return": 309.2
     },
     "ml_logreg": {
       "label": "ML LogReg (p\u22650.50)",
-      "cagr": 5.04,
+      "cagr": 5.06,
       "volatility": 15.04,
       "sharpe": 0.34,
       "max_drawdown": -52.58,
-      "total_return": 151.12
+      "total_return": 151.82
     }
   },
   "equity_curves": {
@@ -5572,6 +5572,10 @@
       {
         "d": "2026-10-27",
         "v": 5.8038
+      },
+      {
+        "d": "2026-10-28",
+        "v": 5.8199
       }
     ],
     "part3_rule": [
@@ -11078,6 +11082,10 @@
       {
         "d": "2026-10-27",
         "v": 4.0807
+      },
+      {
+        "d": "2026-10-28",
+        "v": 4.092
       }
     ],
     "ml_logreg": [
@@ -16584,6 +16592,10 @@
       {
         "d": "2026-10-27",
         "v": 2.5112
+      },
+      {
+        "d": "2026-10-28",
+        "v": 2.5182
       }
     ]
   },
@@ -18596,6 +18608,10 @@
       {
         "d": "2026-10-27",
         "v": 1
+      },
+      {
+        "d": "2026-10-28",
+        "v": 1
       }
     ],
     "ml_probability": [
@@ -20537,43 +20553,43 @@
       },
       {
         "d": "2026-10-02",
-        "v": 0.3282
+        "v": 0.328
       },
       {
         "d": "2026-10-05",
-        "v": 0.3343
+        "v": 0.3341
       },
       {
         "d": "2026-10-06",
-        "v": 0.321
+        "v": 0.3209
       },
       {
         "d": "2026-10-07",
-        "v": 0.3201
+        "v": 0.3199
       },
       {
         "d": "2026-10-08",
-        "v": 0.3343
+        "v": 0.3342
       },
       {
         "d": "2026-10-09",
-        "v": 0.3066
+        "v": 0.3064
       },
       {
         "d": "2026-10-12",
-        "v": 0.3268
+        "v": 0.3267
       },
       {
         "d": "2026-10-13",
-        "v": 0.3251
+        "v": 0.3249
       },
       {
         "d": "2026-10-14",
-        "v": 0.4153
+        "v": 0.4152
       },
       {
         "d": "2026-10-15",
-        "v": 0.4024
+        "v": 0.4023
       },
       {
         "d": "2026-10-16",
@@ -20585,11 +20601,11 @@
       },
       {
         "d": "2026-10-20",
-        "v": 0.4316
+        "v": 0.4315
       },
       {
         "d": "2026-10-21",
-        "v": 0.402
+        "v": 0.4019
       },
       {
         "d": "2026-10-22",
@@ -20605,7 +20621,11 @@
       },
       {
         "d": "2026-10-27",
-        "v": 0.4341
+        "v": 0.434
+      },
+      {
+        "d": "2026-10-28",
+        "v": 0.4048
       }
     ]
   },

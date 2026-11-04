@@ -1,12 +1,12 @@
 {
-  "last_updated": "2026-11-02",
+  "last_updated": "2026-11-03",
   "data_range": {
     "start": "2008-01-28",
-    "end": "2026-11-02",
-    "trading_days": 4722
+    "end": "2026-11-03",
+    "trading_days": 4723
   },
   "current_signals": {
-    "date": "2026-11-02",
+    "date": "2026-11-03",
     "part3_rule": {
       "signal": "RISK-ON",
       "signal_value": 1,
@@ -24,19 +24,19 @@
       },
       "feature_values": {
         "VRatio": 1.021,
-        "Contango": -2.61,
-        "Contango Roll": -6.18,
-        "VRP": 7.82,
-        "FVRP": 4.04,
-        "Vol Momentum": -4.84,
-        "VIX": 21.15,
-        "VIX3M": 21.6
+        "Contango": -1.77,
+        "Contango Roll": -6.16,
+        "VRP": 7.41,
+        "FVRP": 5.41,
+        "Vol Momentum": -4.42,
+        "VIX": 20.83,
+        "VIX3M": 21.27
       }
     },
     "ml_logreg": {
       "signal": "RISK-OFF",
       "signal_value": 0,
-      "probability": 0.5488,
+      "probability": 0.5443,
       "threshold": 0.5,
       "target": "\u22655% drawdown in 20 trading days"
     }
@@ -44,19 +44,19 @@
   "performance": {
     "buy_hold": {
       "label": "Buy & Hold",
-      "cagr": 9.7,
+      "cagr": 9.72,
       "volatility": 19.77,
       "sharpe": 0.49,
       "max_drawdown": -52.58,
-      "total_return": 466.76
+      "total_return": 468.83
     },
     "part3_rule": {
       "label": "Part 3 Rule",
-      "cagr": 7.66,
+      "cagr": 7.68,
       "volatility": 12.84,
       "sharpe": 0.6,
       "max_drawdown": -30.53,
-      "total_return": 298.5
+      "total_return": 299.95
     },
     "ml_logreg": {
       "label": "ML LogReg (p\u22650.50)",
@@ -5572,6 +5572,10 @@
       {
         "d": "2026-11-02",
         "v": 5.6676
+      },
+      {
+        "d": "2026-11-03",
+        "v": 5.6883
       }
     ],
     "part3_rule": [
@@ -11078,6 +11082,10 @@
       {
         "d": "2026-11-02",
         "v": 3.985
+      },
+      {
+        "d": "2026-11-03",
+        "v": 3.9995
       }
     ],
     "ml_logreg": [
@@ -16584,6 +16592,10 @@
       {
         "d": "2026-11-02",
         "v": 2.4523
+      },
+      {
+        "d": "2026-11-03",
+        "v": 2.4523
       }
     ]
   },
@@ -18592,6 +18604,10 @@
       {
         "d": "2026-11-02",
         "v": 1
+      },
+      {
+        "d": "2026-11-03",
+        "v": 1
       }
     ],
     "ml_probability": [
@@ -20593,11 +20609,15 @@
       },
       {
         "d": "2026-10-30",
-        "v": 0.4986
+        "v": 0.4985
       },
       {
         "d": "2026-11-02",
         "v": 0.5488
+      },
+      {
+        "d": "2026-11-03",
+        "v": 0.5443
       }
     ]
   },

@@ -24,7 +24,7 @@
       },
       "feature_values": {
         "VRatio": 0.989,
-        "Contango": -9.54,
+        "Contango": -6.85,
         "Contango Roll": -10.68,
         "VRP": -4.08,
         "FVRP": 11.27,
@@ -36,7 +36,7 @@
     "ml_logreg": {
       "signal": "RISK-OFF",
       "signal_value": 0,
-      "probability": 0.6034,
+      "probability": 0.6071,
       "threshold": 0.5,
       "target": "\u22655% drawdown in 20 trading days"
     }
@@ -20661,7 +20661,7 @@
       },
       {
         "d": "2026-11-18",
-        "v": 0.6034
+        "v": 0.6071
       }
     ]
   },

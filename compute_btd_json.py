@@ -311,10 +311,24 @@ def compute_composite(indicators):
 
     ma2 = rolling_mean(composite_scores, 2)
 
+    # 2-week-low filter: SPX close must be the lowest close of the last
+    # 10 trading days (today included), using the full SPX history.
+    LOW_LOOKBACK = 10
+    spx_idx = {d: k for k, d in enumerate(spx_dates)}
+
+    def _at_2w_low(dt):
+        k = spx_idx.get(dt)
+        if k is None or spx_values[k] is None:
+            return False
+        window = [v for v in spx_values[max(0, k - LOW_LOOKBACK + 1):k + 1]
+                  if v is not None]
+        return bool(window) and spx_values[k] <= min(window)
+
     triggers = []
     for i in range(len(composite_scores)):
         if (composite_scores[i] > 2 and ma2[i] is not None
-                and composite_scores[i] > ma2[i]):
+                and composite_scores[i] > ma2[i]
+                and _at_2w_low(composite_dates[i])):
             triggers.append(composite_dates[i])
 
     spx_map = dict(zip(spx_dates, spx_values))
